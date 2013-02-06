@@ -3,13 +3,6 @@
 #include "parcellite.h"
 #define MAX_HISTORY 1000
 
-#define INIT_HISTORY_KEY      NULL
-#define INIT_ACTIONS_KEY      NULL
-#define INIT_MENU_KEY         NULL
-
-#define DEF_USE_COPY          TRUE
-#define DEF_USE_PRIMARY       FALSE
-#define DEF_SYNCHRONIZE       FALSE
 #define DEF_SAVE_HISTORY      TRUE
 #define DEF_HISTORY_LIMIT     25
 #define DEF_HYPERLINKS_ONLY   FALSE
@@ -22,7 +15,6 @@
 #define DEF_HISTORY_KEY       "<Ctrl><Alt>H"
 #define DEF_ACTIONS_KEY       "<Ctrl><Alt>A"
 #define DEF_MENU_KEY          "<Ctrl><Alt>P"
-#define DEF_NO_ICON           FALSE
 
 /**allow lower nibble to become the number of items of this type  */
 #define PREF_TYPE_TOGGLE 0x10
