@@ -1,7 +1,5 @@
 /* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com> */
 
-#include "state.h"
-
 #include <gtk/gtk.h>
 
 #include <string.h>
@@ -40,7 +38,6 @@ struct history_item {
 GList* history_list = NULL;
 
 void log_clipboard() {
-  check_dirs();
   static gchar* history_path = NULL;
   if (!history_path)
       history_path = g_build_filename(g_get_user_data_dir(), "clipboard_log", NULL);
@@ -193,13 +190,6 @@ done:
 void check_clipboards() {
   gchar *ptext, *ctext, *last;
   int n = 0;
-  if (state.rlen >0) {
-    state.rlen = validate_utf8_text(state.buf, state.rlen);
-    if (state.dbg) g_printf("Setting CLI '%s'\n", state.buf);
-    update_clipboard(clipboard, state.buf, H_MODE_NEW);
-    n = 2;
-    state.rlen = 0;
-  }
 
   ctext = update_clipboard(clipboard, NULL, H_MODE_CHECK);
 
@@ -217,8 +207,6 @@ int main(int argc, char *argv[])
 {
   gtk_init(&argc, &argv);
 
-  init_state();
-
   clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
   g_timeout_add(500/*ms*/, check_clipboards, NULL);
 
@@ -226,6 +214,5 @@ int main(int argc, char *argv[])
 
   gtk_main();
 
-  close_state();
   return 0;
 }
