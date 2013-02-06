@@ -4,5 +4,4 @@ set -v
 CFLAGS=`pkg-config --cflags gtk+-2.0`
 gcc -g -O2 $CFLAGS -c -o main.o main.c
 gcc -g -O2 $CFLAGS -c -o utils.o utils.c
-gcc -g -O2 $CFLAGS -c -o attr_list.o attr_list.c
-gcc -g -O2 main.o utils.o attr_list.o   -lX11 `pkg-config --libs gtk+-2.0`  -o cliplog
+gcc -g -O2 main.o utils.o   -lX11 `pkg-config --libs gtk+-2.0`  -o cliplog

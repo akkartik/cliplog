@@ -10,6 +10,5 @@
 #define PARCELLITE_ICON PARCELLITE_PROG_NAME
 #include "utils.h"
 #include "main.h"
-#include "attr_list.h"
 #endif
 
