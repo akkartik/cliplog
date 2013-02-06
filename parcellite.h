@@ -32,7 +32,6 @@
 #include "history.h"
 #include "main.h"
 #include "keybinder.h"
-#include "parcellite-i18n.h"
 #include "attr_list.h"
 #endif
 

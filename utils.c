@@ -73,14 +73,14 @@ void check_dirs()
   {
     /* Try to make data directory */
     if (g_mkdir_with_parents(data_dir, 0755) != 0)
-      g_warning(_("Couldn't create directory: %s\n"), data_dir);
+      g_warning("Couldn't create directory: %s\n", data_dir);
   }
   /* Check if config directory exists */
   if (!g_file_test(config_dir, G_FILE_TEST_EXISTS))
   {
     /* Try to make config directory */
     if (g_mkdir_with_parents(config_dir, 0755) != 0)
-      g_warning(_("Couldn't create directory: %s\n"), config_dir);
+      g_warning("Couldn't create directory: %s\n", config_dir);
   }
   /* Cleanup */
   g_free(data_dir);
@@ -121,28 +121,28 @@ struct cmdline_opts *parse_options(int argc, char* argv[])
       "daemon", 'd',
       0,
       G_OPTION_ARG_NONE,
-      &opts->daemon, _("Run as daemon"),
+      &opts->daemon, "Run as daemon",
       NULL
     },
     {
       "no-icon", 'n',
       0,
       G_OPTION_ARG_NONE,
-      &opts->icon, _("Do not use status icon (Ctrl-Alt-P for menu)"),
+      &opts->icon, "Do not use status icon (Ctrl-Alt-P for menu)",
       NULL
     },
     {
       "clipboard", 'c',
       0,
       G_OPTION_ARG_NONE,
-      &opts->clipboard, _("Print clipboard contents"),
+      &opts->clipboard, "Print clipboard contents",
       NULL
     },
     {
       "primary", 'p',
       0,
       G_OPTION_ARG_NONE,
-      &opts->primary, _("Print primary contents"),
+      &opts->primary, "Print primary contents",
       NULL
     },
     {
@@ -154,14 +154,14 @@ struct cmdline_opts *parse_options(int argc, char* argv[])
   GOptionContext* context = g_option_context_new(NULL);
   /* Set summary */
   g_option_context_set_summary(context,
-                             _("Clipboard CLI usage examples:\n\n"
+                             "Clipboard CLI usage examples:\n\n"
                                "  echo \"copied to clipboard\" | parcellite\n"
                                "  parcellite \"copied to clipboard\"\n"
-                               "  echo \"copied to clipboard\" | parcellite -c"));
+                               "  echo \"copied to clipboard\" | parcellite -c");
   /* Set description */
   g_option_context_set_description(context,
-                                 _("Written by Gilberto \"Xyhthyx\" Miralla.\n"
-                                   "Report bugs to <gpib@rickyrockrat.net>."));
+                                 "Written by Gilberto \"Xyhthyx\" Miralla.\n"
+                                   "Report bugs to <gpib@rickyrockrat.net>.");
   /* Add entries and parse options */
   g_option_context_add_main_entries(context, main_entries, NULL);
   g_option_context_parse(context, &argc, &argv, NULL);

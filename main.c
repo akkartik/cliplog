@@ -423,13 +423,13 @@ static void *execute_action(void *command)
   actions_lock = TRUE;
   if (!have_appindicator && show_icon) {
   gtk_status_icon_set_from_stock((GtkStatusIcon*)status_icon, GTK_STOCK_EXECUTE);
-  gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, _("Executing action..."));
+  gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Executing action...");
   }
   if(system((gchar*)command))
   	g_print("sytem command '%s' failed\n",(gchar *)command);
   if (!have_appindicator &&show_icon) {
 	gtk_status_icon_set_from_icon_name((GtkStatusIcon*)status_icon, PARCELLITE_ICON);
-  gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, _("Clipboard Manager"));
+  gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Clipboard Manager");
   }
   actions_lock = FALSE;
   g_free((gchar*)command);
@@ -443,7 +443,7 @@ static void action_exit(GPid pid, gint status, gpointer data)
   g_spawn_close_pid(pid);
   if (!have_appindicator && show_icon) {
 		gtk_status_icon_set_from_icon_name((GtkStatusIcon*)status_icon, PARCELLITE_ICON);
-    gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, _("Clipboard Manager"));
+    gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Clipboard Manager");
   }
   actions_lock = FALSE;
 }
@@ -455,7 +455,7 @@ static void action_selected(GtkButton *button, gpointer user_data)
   actions_lock = TRUE;
   if (!have_appindicator && show_icon) {
     gtk_status_icon_set_from_stock((GtkStatusIcon*)status_icon, GTK_STOCK_EXECUTE);
-    gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, _("Executing action..."));
+    gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Executing action...");
   }
   /* Insert clipboard into command (user_data), and prepare it for execution */
   gchar* clipboard_text = gtk_clipboard_wait_for_text(clipboard);
@@ -533,7 +533,7 @@ static void edit_selected(GtkMenuItem *menu_item, gpointer user_data)
     	
     
     /* Create the dialog */
-    GtkWidget* dialog = gtk_dialog_new_with_buttons(_("Editing Clipboard"), NULL,
+    GtkWidget* dialog = gtk_dialog_new_with_buttons("Editing Clipboard", NULL,
                                                    (GTK_DIALOG_MODAL   +    GTK_DIALOG_NO_SEPARATOR),
                                                     GTK_STOCK_CANCEL,       GTK_RESPONSE_REJECT,
                                                     GTK_STOCK_OK,           GTK_RESPONSE_ACCEPT, NULL);
@@ -736,7 +736,7 @@ static void clear_selected(GtkMenuItem *menu_item, gpointer user_data)
                                                        GTK_DIALOG_MODAL,
                                                        GTK_MESSAGE_OTHER,
                                                        GTK_BUTTONS_OK_CANCEL,
-                                                       _("Clear the history?"));
+                                                       "Clear the history?");
     
     if (gtk_dialog_run((GtkDialog*)confirm_dialog) == GTK_RESPONSE_OK)    {
       /* Clear history and free history-related variables */
@@ -788,7 +788,7 @@ static void show_about_dialog(GtkMenuItem *menu_item, gpointer user_data)
     gtk_about_dialog_set_version((GtkAboutDialog*)about_dialog, VERSION);
     #endif
     gtk_about_dialog_set_comments((GtkAboutDialog*)about_dialog,
-                                _("Lightweight GTK+ clipboard manager."));
+                                "Lightweight GTK+ clipboard manager.");
     
     gtk_about_dialog_set_website((GtkAboutDialog*)about_dialog,
                                  "http://parcellite.sourceforge.net");
@@ -885,7 +885,7 @@ static gboolean show_actions_menu(gpointer data)
     menu_item = gtk_menu_item_new_with_label("None");
     /* Modify menu item label properties */
     item_label = gtk_bin_get_child((GtkBin*)menu_item);
-    gtk_label_set_markup((GtkLabel*)item_label, _("<b>None</b>"));
+    gtk_label_set_markup((GtkLabel*)item_label, "<b>None</b>");
     /* Append menu item */
     g_signal_connect((GObject*)menu_item, "select", (GCallback)gtk_menu_item_deselect, NULL);
     
@@ -908,7 +908,7 @@ static gboolean show_actions_menu(gpointer data)
     if (!size)
     {
       /* File contained no actions so adding empty */
-      menu_item = gtk_menu_item_new_with_label(_("Empty"));
+      menu_item = gtk_menu_item_new_with_label("Empty");
       gtk_widget_set_sensitive(menu_item, FALSE);
       gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
     }
@@ -943,14 +943,14 @@ static gboolean show_actions_menu(gpointer data)
   else
   {
     /* File did not open so adding empty */
-    menu_item = gtk_menu_item_new_with_label(_("Empty"));
+    menu_item = gtk_menu_item_new_with_label("Empty");
     gtk_widget_set_sensitive(menu_item, FALSE);
     gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
   }
   /* -------------------- */
   gtk_menu_shell_append((GtkMenuShell*)menu, gtk_separator_menu_item_new());
   /* Edit actions */
-  menu_item = gtk_image_menu_item_new_with_mnemonic(_("_Edit actions"));
+  menu_item = gtk_image_menu_item_new_with_mnemonic("_Edit actions");
   menu_image = gtk_image_new_from_stock(GTK_STOCK_EDIT, GTK_ICON_SIZE_MENU);
   gtk_image_menu_item_set_image((GtkImageMenuItem*)menu_item, menu_image);
   g_signal_connect((GObject*)menu_item, "activate", (GCallback)edit_actions_selected, NULL);
@@ -1572,7 +1572,7 @@ next_loop:
   else
   {
     /* Nothing in history so adding empty */
-    menu_item = gtk_menu_item_new_with_label(_("Empty"));
+    menu_item = gtk_menu_item_new_with_label("Empty");
     gtk_widget_set_sensitive(menu_item, FALSE);
     gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
   }
@@ -1600,17 +1600,17 @@ next_loop:
 	
 	if(get_pref_int32("type_search")){
     /* Edit clipboard */
-		h.title_item = gtk_image_menu_item_new_with_label( _("Use Alt-E to edit, Alt-C to clear") );
+		h.title_item = gtk_image_menu_item_new_with_label("Use Alt-E to edit, Alt-C to clear");
     menu_image = gtk_image_new_from_stock(GTK_STOCK_EDIT, GTK_ICON_SIZE_MENU);
     gtk_image_menu_item_set_image((GtkImageMenuItem*)h.title_item, menu_image);
     gtk_menu_shell_append((GtkMenuShell*)menu, h.title_item);    
   }else{
-    menu_item = gtk_image_menu_item_new_with_mnemonic(_("_Edit Clipboard"));
+    menu_item = gtk_image_menu_item_new_with_mnemonic("_Edit Clipboard");
     menu_image = gtk_image_new_from_stock(GTK_STOCK_EDIT, GTK_ICON_SIZE_MENU);
     gtk_image_menu_item_set_image((GtkImageMenuItem*)menu_item, menu_image);
 		g_signal_connect((GObject*)menu_item, "activate", (GCallback)edit_selected, (gpointer)&h);
     gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
-		menu_item = gtk_image_menu_item_new_with_mnemonic(_("_Clear"));
+		menu_item = gtk_image_menu_item_new_with_mnemonic("_Clear");
 		/* Clear */
 	  menu_image = gtk_image_new_from_stock(GTK_STOCK_CLEAR, GTK_ICON_SIZE_MENU);
 	  gtk_image_menu_item_set_image((GtkImageMenuItem*)menu_item, menu_image);
@@ -1659,7 +1659,7 @@ GtkWidget *create_parcellite_menu(guint button, guint activate_time)
 	/* Save History */
   menu_item = gtk_image_menu_item_new_from_stock(GTK_STOCK_SAVE_AS, NULL);
   g_signal_connect((GObject*)menu_item, "activate", (GCallback)history_save_as, NULL);
-	gtk_widget_set_tooltip_text(menu_item, _("Save History as a text file. Prepends xHIST_0000 to each entry. x is either P(persistent) or N (normal)"));
+	gtk_widget_set_tooltip_text(menu_item, "Save History as a text file. Prepends xHIST_0000 to each entry. x is either P(persistent) or N (normal)");
   gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
   /* Preferences */
   menu_item = gtk_image_menu_item_new_from_stock(GTK_STOCK_PREFERENCES, NULL);
@@ -1668,7 +1668,7 @@ GtkWidget *create_parcellite_menu(guint button, guint activate_time)
 	if(have_appindicator){
 			/* History */
 		GtkWidget *img=gtk_image_new_from_icon_name(PARCELLITE_ICON,GTK_ICON_SIZE_MENU); 
-	  menu_item = gtk_image_menu_item_new_with_mnemonic(_("_History"));
+	  menu_item = gtk_image_menu_item_new_with_mnemonic("_History");
 		gtk_image_menu_item_set_image((GtkImageMenuItem *)menu_item,img);
 	  g_signal_connect((GObject*)menu_item, "activate", (GCallback)_show_history_menu, NULL);
 	  gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
@@ -1847,7 +1847,7 @@ static void parcellite_init()
 #endif
 		if(!have_appindicator){
 			status_icon = gtk_status_icon_new_from_icon_name(PARCELLITE_ICON); 
-	    gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, _("Clipboard Manager"));
+	    gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Clipboard Manager");
 	    g_signal_connect((GObject*)status_icon, "activate", (GCallback)status_icon_clicked, NULL);
 	    g_signal_connect((GObject*)status_icon, "popup-menu", (GCallback)show_parcellite_menu, NULL);
 		}

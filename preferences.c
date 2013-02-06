@@ -790,7 +790,7 @@ int add_section(int sec, GtkWidget *parent)
 		switch (myprefs[i].type&PREF_TYPE_MASK){
 			
 			case PREF_TYPE_TOGGLE:
-				myprefs[i].w=gtk_check_button_new_with_mnemonic(_(myprefs[i].desc));
+				myprefs[i].w=gtk_check_button_new_with_mnemonic(myprefs[i].desc);
 				packit=myprefs[i].w;	
 				break;
 			
@@ -798,13 +798,13 @@ int add_section(int sec, GtkWidget *parent)
 				if(!single_is)
 					hbox = gtk_hbox_new(FALSE, 4);  
   			label = gtk_label_new(NULL);
-				gtk_label_set_markup((GtkLabel*)label, _(myprefs[i].desc));
+				gtk_label_set_markup((GtkLabel*)label, myprefs[i].desc);
 				gtk_box_pack_start((GtkBox*)hbox, label, FALSE, FALSE, 0);
   			myprefs[i].w=gtk_spin_button_new((GtkAdjustment*)gtk_adjustment_new ( \
 				myprefs[i].val,myprefs[i].adj->lower,myprefs[i].adj->upper,myprefs[i].adj->step,myprefs[i].adj->page,0 ),10,0); 
   			gtk_box_pack_start((GtkBox*)hbox, myprefs[i].w, FALSE, FALSE, 0);
   			gtk_spin_button_set_update_policy((GtkSpinButton*)myprefs[i].w, GTK_UPDATE_IF_VALID);
-  			if(NULL != myprefs[i].tip) gtk_widget_set_tooltip_text(label, _(myprefs[i].tip));
+  			if(NULL != myprefs[i].tip) gtk_widget_set_tooltip_text(label, myprefs[i].tip);
   			packit=hbox;
 				break;
 			
@@ -812,7 +812,7 @@ int add_section(int sec, GtkWidget *parent)
 				if(!single_is)
 					hbox = gtk_hbox_new(TRUE, 4);
 			  label = gtk_label_new(NULL);
-				gtk_label_set_markup((GtkLabel*)label, _(myprefs[i].desc));
+				gtk_label_set_markup((GtkLabel*)label, myprefs[i].desc);
 			  gtk_misc_set_alignment((GtkMisc*)label, 0.0, 0.50);
 			  gtk_box_pack_start((GtkBox*)hbox, label, TRUE, TRUE, 0);
 			  myprefs[i].w = gtk_entry_new();
@@ -839,7 +839,7 @@ int add_section(int sec, GtkWidget *parent)
 		  
 		/**tooltips are set on the label of the spin box, not the widget and are handled above */
 		if(PREF_TYPE_SPIN != myprefs[i].type && NULL != myprefs[i].tip)
-		  gtk_widget_set_tooltip_text(myprefs[i].w, _(myprefs[i].tip));
+		  gtk_widget_set_tooltip_text(myprefs[i].w, myprefs[i].tip);
 		
 		if(NULL != myprefs[i].sig && connect)
 			g_signal_connect((GObject*)myprefs[i].w, myprefs[i].sig, (GCallback)myprefs[i].sfunc, myprefs[i].w);
@@ -880,7 +880,7 @@ void show_preferences(gint tab)
 	init_pref();
   
   /* Create the dialog */
-  GtkWidget* dialog = gtk_dialog_new_with_buttons(_("Preferences"),     NULL,
+  GtkWidget* dialog = gtk_dialog_new_with_buttons("Preferences",     NULL,
                                                    (GTK_DIALOG_MODAL  + GTK_DIALOG_NO_SEPARATOR),
                                                     GTK_STOCK_CANCEL,   GTK_RESPONSE_REJECT,
                                                     GTK_STOCK_OK,       GTK_RESPONSE_ACCEPT, NULL);
@@ -899,7 +899,7 @@ void show_preferences(gint tab)
 /* Build the behavior page */  
   GtkWidget* page_behavior = gtk_alignment_new(0.50, 0.50, 1.0, 1.0);
   gtk_alignment_set_padding((GtkAlignment*)page_behavior, 12, 6, 12, 6);
-  gtk_notebook_append_page((GtkNotebook*)notebook, page_behavior, gtk_label_new(_("Behavior")));
+  gtk_notebook_append_page((GtkNotebook*)notebook, page_behavior, gtk_label_new("Behavior"));
   GtkWidget* vbox_behavior = gtk_vbox_new(FALSE, 12);
   gtk_container_add((GtkContainer*)page_behavior, vbox_behavior);
   
@@ -907,7 +907,7 @@ void show_preferences(gint tab)
   frame = gtk_frame_new(NULL);
   gtk_frame_set_shadow_type((GtkFrame*)frame, GTK_SHADOW_NONE);
   label = gtk_label_new(NULL);
-  gtk_label_set_markup((GtkLabel*)label, _("<b>Clipboards</b>"));
+  gtk_label_set_markup((GtkLabel*)label, "<b>Clipboards</b>");
   gtk_frame_set_label_widget((GtkFrame*)frame, label);
   alignment = gtk_alignment_new(0.50, 0.50, 1.0, 1.0);
   gtk_alignment_set_padding((GtkAlignment*)alignment, 12, 0, 12, 0);
@@ -922,7 +922,7 @@ void show_preferences(gint tab)
   frame = gtk_frame_new(NULL);
   gtk_frame_set_shadow_type((GtkFrame*)frame, GTK_SHADOW_NONE);
   label = gtk_label_new(NULL);
-  gtk_label_set_markup((GtkLabel*)label, _("<b>History</b>"));
+  gtk_label_set_markup((GtkLabel*)label, "<b>History</b>");
   gtk_frame_set_label_widget((GtkFrame*)frame, label);
   alignment = gtk_alignment_new(0.50, 0.50, 1.0, 1.0);
   gtk_alignment_set_padding((GtkAlignment*)alignment, 12, 0, 12, 0);
@@ -935,7 +935,7 @@ void show_preferences(gint tab)
   frame = gtk_frame_new(NULL);
   gtk_frame_set_shadow_type((GtkFrame*)frame, GTK_SHADOW_NONE);
   label = gtk_label_new(NULL);
-  gtk_label_set_markup((GtkLabel*)label, _("<b>Miscellaneous</b>"));
+  gtk_label_set_markup((GtkLabel*)label, "<b>Miscellaneous</b>");
   gtk_frame_set_label_widget((GtkFrame*)frame, label);
   alignment = gtk_alignment_new(0.50, 0.50, 1.0, 1.0);
   gtk_alignment_set_padding((GtkAlignment*)alignment, 12, 0, 12, 0);
@@ -949,7 +949,7 @@ void show_preferences(gint tab)
   /* Build the display page */
   GtkWidget* page_display = gtk_alignment_new(0.50, 0.50, 1.0, 1.0);
   gtk_alignment_set_padding((GtkAlignment*)page_display, 12, 6, 12, 6);
-  gtk_notebook_append_page((GtkNotebook*)notebook, page_display, gtk_label_new(_("Display")));
+  gtk_notebook_append_page((GtkNotebook*)notebook, page_display, gtk_label_new("Display"));
   GtkWidget* vbox_display = gtk_vbox_new(FALSE, 12);
   gtk_container_add((GtkContainer*)page_display, vbox_display);
   
@@ -957,7 +957,7 @@ void show_preferences(gint tab)
   frame = gtk_frame_new(NULL);
   gtk_frame_set_shadow_type((GtkFrame*)frame, GTK_SHADOW_NONE);
   label = gtk_label_new(NULL);
-  gtk_label_set_markup((GtkLabel*)label, _("<b>Items</b>"));
+  gtk_label_set_markup((GtkLabel*)label, "<b>Items</b>");
   gtk_frame_set_label_widget((GtkFrame*)frame, label);
   alignment = gtk_alignment_new(0.50, 0.50, 1.0, 1.0);
   gtk_alignment_set_padding((GtkAlignment*)alignment, 12, 0, 12, 0);
@@ -973,7 +973,7 @@ void show_preferences(gint tab)
   frame = gtk_frame_new(NULL);
   gtk_frame_set_shadow_type((GtkFrame*)frame, GTK_SHADOW_NONE);
   label = gtk_label_new(NULL);
-  gtk_label_set_markup((GtkLabel*)label, _("<b>Omitting</b>"));
+  gtk_label_set_markup((GtkLabel*)label, "<b>Omitting</b>");
   gtk_frame_set_label_widget((GtkFrame*)frame, label);
   alignment = gtk_alignment_new(0.50, 0.50, 1.0, 1.0);
   gtk_alignment_set_padding((GtkAlignment*)alignment, 12, 0, 12, 0);
@@ -985,25 +985,25 @@ void show_preferences(gint tab)
   hbox = gtk_hbox_new(FALSE, 4);
   gtk_box_pack_start((GtkBox*)vbox, hbox, FALSE, FALSE, 0);
 	p=get_pref("ellipsize");
-  label = gtk_label_new(_(p->desc));
+  label = gtk_label_new(p->desc);
   gtk_misc_set_alignment((GtkMisc*)label, 0.0, 0.50);
   gtk_box_pack_start((GtkBox*)hbox, label, FALSE, FALSE, 0);
   p->w = gtk_combo_box_new_text();
-  gtk_combo_box_append_text((GtkComboBox*)p->w, _("Beginning"));
-  gtk_combo_box_append_text((GtkComboBox*)p->w, _("Middle"));
-  gtk_combo_box_append_text((GtkComboBox*)p->w, _("End"));
+  gtk_combo_box_append_text((GtkComboBox*)p->w, "Beginning");
+  gtk_combo_box_append_text((GtkComboBox*)p->w, "Middle");
+  gtk_combo_box_append_text((GtkComboBox*)p->w, "End");
   gtk_box_pack_start((GtkBox*)hbox, p->w, FALSE, FALSE, 0);
   gtk_box_pack_start((GtkBox*)vbox_display, frame, FALSE, FALSE, 0);
   
   /* Build the actions page */
   GtkWidget* page_actions = gtk_alignment_new(0.50, 0.50, 1.0, 1.0);
   gtk_alignment_set_padding((GtkAlignment*)page_actions, 6, 6, 6, 6);
-  gtk_notebook_append_page((GtkNotebook*)notebook, page_actions, gtk_label_new(_("Actions")));
+  gtk_notebook_append_page((GtkNotebook*)notebook, page_actions, gtk_label_new("Actions"));
   GtkWidget* vbox_actions = gtk_vbox_new(FALSE, 6);
   gtk_container_add((GtkContainer*)page_actions, vbox_actions);
   
   /* Build the actions label */
-  label = gtk_label_new(_("Control-click Parcellite\'s tray icon to use actions"));
+  label = gtk_label_new("Control-click Parcellite\'s tray icon to use actions");
   gtk_label_set_line_wrap((GtkLabel*)label, TRUE);
   gtk_misc_set_alignment((GtkMisc*)label, 0.0, 0.50);
   gtk_box_pack_start((GtkBox*)vbox_actions, label, FALSE, FALSE, 0);
@@ -1024,10 +1024,10 @@ void show_preferences(gint tab)
   g_object_set(name_renderer, "editable", TRUE, NULL);
   g_signal_connect((GObject*)name_renderer, "edited", (GCallback)edit_action, (gpointer)0);
 	
-	label=gtk_label_new(_("Action"));
+	label=gtk_label_new("Action");
 	gtk_widget_set_tooltip_text(label,"This is the Action Name. \nDO NOT put commands here.");
 	gtk_widget_show (label);
-  tree_column = gtk_tree_view_column_new_with_attributes(_("Action"), name_renderer, "text", 0, NULL);
+  tree_column = gtk_tree_view_column_new_with_attributes("Action", name_renderer, "text", 0, NULL);
   gtk_tree_view_column_set_widget(tree_column,label); 
 	
   gtk_tree_view_column_set_resizable(tree_column, TRUE);
@@ -1037,10 +1037,10 @@ void show_preferences(gint tab)
   g_object_set(command_renderer, "ellipsize-set", TRUE, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
   g_signal_connect((GObject*)command_renderer, "edited", (GCallback)edit_action, (gpointer)1);
 	
-	label=gtk_label_new(_("Command"));
+	label=gtk_label_new("Command");
 	gtk_widget_set_tooltip_text(label,"Put the full commands here. ex echo \"parcellite gave me %s\">>$HOME/ptest");
 	gtk_widget_show (label);
-  tree_column = gtk_tree_view_column_new_with_attributes(_("Command"), command_renderer, "text", 1, NULL);
+  tree_column = gtk_tree_view_column_new_with_attributes("Command", command_renderer, "text", 1, NULL);
 	gtk_tree_view_column_set_widget(tree_column,label); 
   gtk_tree_view_column_set_expand(tree_column, TRUE);
   gtk_tree_view_append_column((GtkTreeView*)treeview, tree_column);
@@ -1056,11 +1056,11 @@ void show_preferences(gint tab)
   GtkWidget* hbbox = gtk_hbutton_box_new();
   gtk_box_set_spacing((GtkBox*)hbbox, 6);
   gtk_button_box_set_layout((GtkButtonBox*)hbbox, GTK_BUTTONBOX_START);
-  GtkWidget* add_button = gtk_button_new_with_label(_("Add..."));
+  GtkWidget* add_button = gtk_button_new_with_label("Add...");
   gtk_button_set_image((GtkButton*)add_button, gtk_image_new_from_stock(GTK_STOCK_ADD, GTK_ICON_SIZE_MENU));
   g_signal_connect((GObject*)add_button, "clicked", (GCallback)add_action, NULL);
   gtk_box_pack_start((GtkBox*)hbbox, add_button, FALSE, TRUE, 0);
-  GtkWidget* remove_button = gtk_button_new_with_label(_("Remove"));
+  GtkWidget* remove_button = gtk_button_new_with_label("Remove");
   gtk_button_set_image((GtkButton*)remove_button, gtk_image_new_from_stock(GTK_STOCK_REMOVE, GTK_ICON_SIZE_MENU));
   g_signal_connect((GObject*)remove_button, "clicked", (GCallback)remove_action, NULL);
   gtk_box_pack_start((GtkBox*)hbbox, remove_button, FALSE, TRUE, 0);
@@ -1077,7 +1077,7 @@ void show_preferences(gint tab)
   /* Build the hotkeys page */
   GtkWidget* page_extras = gtk_alignment_new(0.50, 0.50, 1.0, 1.0);
   gtk_alignment_set_padding((GtkAlignment*)page_extras, 12, 6, 12, 6);
-  gtk_notebook_append_page((GtkNotebook*)notebook, page_extras, gtk_label_new(_("Hotkeys")));
+  gtk_notebook_append_page((GtkNotebook*)notebook, page_extras, gtk_label_new("Hotkeys"));
   GtkWidget* vbox_extras = gtk_vbox_new(FALSE, 12);
   gtk_container_add((GtkContainer*)page_extras, vbox_extras);
   
@@ -1085,7 +1085,7 @@ void show_preferences(gint tab)
   frame = gtk_frame_new(NULL);
   gtk_frame_set_shadow_type((GtkFrame*)frame, GTK_SHADOW_NONE);
   label = gtk_label_new(NULL);
-  gtk_label_set_markup((GtkLabel*)label, _("<b>Hotkeys</b>"));
+  gtk_label_set_markup((GtkLabel*)label, "<b>Hotkeys</b>");
   gtk_frame_set_label_widget((GtkFrame*)frame, label);
   alignment = gtk_alignment_new(0.50, 0.50, 1.0, 1.0);
   gtk_alignment_set_padding((GtkAlignment*)alignment, 12, 0, 12, 0);
