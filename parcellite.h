@@ -21,9 +21,6 @@
 #include <gtk/gtk.h>
 #include <string.h>
 #include <unistd.h>
-#ifdef HAVE_APPINDICATOR
-#include <libappindicator/app-indicator.h>
-#endif
 #define PARCELLITE_PROG_NAME "parcellite"
 #define PARCELLITE_ICON PARCELLITE_PROG_NAME
 #include "daemon.h"

@@ -1,6 +1,3 @@
-/* Have appindicator */
-/* #undef HAVE_APPINDICATOR */
-
 /* Define to 1 if you have the `bind_textdomain_codeset' function. */
 #define HAVE_BIND_TEXTDOMAIN_CODESET 1
 

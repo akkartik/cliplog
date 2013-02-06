@@ -40,10 +40,6 @@ GtkWidget *hmenu;
 static GtkClipboard* primary;
 static GtkClipboard* clipboard;
 struct p_fifo *fifo;
-#ifdef HAVE_APPINDICATOR
-static AppIndicator *indicator=NULL;
-static GtkWidget *indicator_menu = NULL;
-#endif
 static GtkStatusIcon *status_icon; 
 static GMutex *clip_lock=NULL;
 GMutex *hist_lock=NULL;
@@ -378,26 +374,6 @@ done:
 	return;
 	/*g_mutex_unlock(clip_lock);	 */
 }
-#ifdef HAVE_APPINDICATOR
-/***************************************************************************/
-/** Check for appindicator.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
-gboolean check_for_appindictor( gpointer data)
-{ 
-	if(NULL != appindicator_process && !have_appindicator ){
-		g_printf("Looking for '%s'\n",appindicator_process);
-		if(proc_find(appindicator_process,PROC_MODE_STRSTR,NULL) >0){
-			have_appindicator=1;
-			if(NULL == indicator && show_icon)
-				create_app_indicator();	
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-#endif
 /***************************************************************************/
 /** Called every CHECK_INTERVAL seconds to check for new items 
 \n\b Arguments:
@@ -406,13 +382,6 @@ gboolean check_for_appindictor( gpointer data)
 gboolean check_clipboards_tic(gpointer data)
 {
 	check_clipboards(H_MODE_CHECK);
-#ifdef HAVE_APPINDICATOR
-	if(have_appindicator){
-		if(NULL == indicator && show_icon)
-			create_app_indicator();	
-	}
-	
-#endif
 	return TRUE;
 }
 
@@ -1720,26 +1689,6 @@ gint figure_histories(void)
 	/*g_printf("Using history 0x%X\n",i); */
 	return i;
 }
-#ifdef HAVE_APPINDICATOR
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
-void create_app_indicator(void)
-{
-	/* Create the menu */
-	indicator_menu = create_parcellite_menu(0,gtk_get_current_event_time());
-	/* check if we need to create the indicator or just refresh the menu */
-	if(NULL == indicator) {
-		indicator = app_indicator_new("parcellite", "parcellite", APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
-		app_indicator_set_status (indicator, APP_INDICATOR_STATUS_ACTIVE);
-		
-		app_indicator_set_attention_icon (indicator,"parcellite");
-	}
-	app_indicator_set_menu (indicator, GTK_MENU (indicator_menu));
-}
-#endif
 	
 /* Called when status icon is left-clicked */
 static void status_icon_clicked(GtkStatusIcon *status_icon, gpointer user_data)
@@ -1784,14 +1733,7 @@ void actions_hotkey(char *keystring, gpointer user_data)
 /* Called when actions global hotkey is pressed */
 void menu_hotkey(char *keystring, gpointer user_data)
 {
-#ifdef HAVE_APPINDICATOR
-	/*create_app_indicator(); */
-	create_parcellite_menu(0, gtk_get_current_event_time());
-	/** GtkWidget * w=create_parcellite_menu(0, gtk_get_current_event_time());
-	app_indicator_set_menu (indicator, GTK_MENU (w));*/
-#else
   show_parcellite_menu(status_icon, 0, 0, NULL);
-#endif
 }
 
 /* Startup calls and initializations */
@@ -1825,11 +1767,6 @@ static void parcellite_init()
 	}
 	
   g_timeout_add(CHECK_INTERVAL, check_clipboards_tic, NULL);  
-#ifdef HAVE_APPINDICATOR
-	check_for_appindictor(NULL);
-	if(!have_appindicator) /**maybe it slept in, check for it every 30 seconds.  */
-		g_timeout_add(CHECK_APPINDICATOR_INTERVAL, check_for_appindictor, NULL);  
-#endif
   
   /* Bind global keys */
   keybinder_init();
@@ -1841,10 +1778,6 @@ static void parcellite_init()
   /* Create status icon */
   if (show_icon)
   {
-#ifdef HAVE_APPINDICATOR
-	if(have_appindicator)/* Indicator */
-		create_app_indicator();
-#endif
 		if(!have_appindicator){
 			status_icon = gtk_status_icon_new_from_icon_name(PARCELLITE_ICON); 
 	    gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Clipboard Manager");
@@ -1990,11 +1923,6 @@ int main(int argc, char *argv[])
   /* Run GTK+ loop */
   gtk_main();
   
-#ifdef HAVE_APPINDICATOR
-	if (have_appindicator & show_icon)
-		app_indicator_set_status(indicator, APP_INDICATOR_STATUS_PASSIVE);
-#endif
-	
   /* Unbind keys */
 	keybinder_unbind(get_pref_string("phistory_key"), phistory_hotkey);
   keybinder_unbind(get_pref_string("history_key"), history_hotkey);
