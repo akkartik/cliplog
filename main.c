@@ -1,6 +1,11 @@
 /* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com> */
 
-#include "parcellite.h"
+#include "fifo.h"
+
+#include <string.h>
+#include <unistd.h>
+
+#define CHECK_INTERVAL 500
 
 static GtkClipboard* primary;
 static GtkClipboard* clipboard;

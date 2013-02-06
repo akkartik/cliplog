@@ -1,12 +1,16 @@
 /* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com> */
 
-#include "parcellite.h"
-/**for our fifo interface  */
+#include "fifo.h"
+
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+
+#define FIFO_MODE_NONE 0x10
+#define FIFO_MODE_PRI  0x20
+#define FIFO_MODE_CLI  0x40
 
 void check_dirs() {
   gchar* data_dir = g_build_path(G_DIR_SEPARATOR_S, g_get_user_data_dir(), "cliplog",  NULL);
@@ -104,19 +108,19 @@ int open_fifos(struct p_fifo *fifo)
   flg=O_RDWR|O_NONBLOCK;/*|O_EXCL; */
 
   f=g_build_filename(g_get_user_data_dir(), "cliplog/primary", NULL);
-  if((fifo->fifo_p=_open_fifo(f,flg)) > 2) {
-    if(fifo->dbg) g_printf("PRI fifo %d\n",fifo->fifo_p);
-    fifo->g_ch_p=g_io_channel_unix_new (fifo->fifo_p);
+  if((fifo->primary_fifo=_open_fifo(f,flg)) > 2) {
+    if(fifo->dbg) g_printf("PRI fifo %d\n",fifo->primary_fifo);
+    fifo->g_ch_p=g_io_channel_unix_new (fifo->primary_fifo);
     g_io_add_watch (fifo->g_ch_p,G_IO_IN|G_IO_HUP,fifo_read_cb,(gpointer)fifo);
   }
 
   f=g_build_filename(g_get_user_data_dir(), "cliplog/clipboard", NULL);
-  if((fifo->fifo_c=_open_fifo(f,flg)) > 2) {
-    fifo->g_ch_c=g_io_channel_unix_new (fifo->fifo_c);
+  if((fifo->clipboard_fifo=_open_fifo(f,flg)) > 2) {
+    fifo->g_ch_c=g_io_channel_unix_new (fifo->clipboard_fifo);
     g_io_add_watch (fifo->g_ch_c,G_IO_IN|G_IO_HUP,fifo_read_cb,(gpointer)fifo);
   }
-  if(fifo->dbg) g_printf("CLI fifo %d PRI fifo %d\n",fifo->fifo_c,fifo->fifo_p);
-  if(fifo->fifo_c <3 || fifo->fifo_p <3)
+  if(fifo->dbg) g_printf("CLI fifo %d PRI fifo %d\n",fifo->clipboard_fifo,fifo->primary_fifo);
+  if(fifo->clipboard_fifo <3 || fifo->primary_fifo <3)
     return -1;
   return 0;
 }
@@ -129,11 +133,11 @@ int read_fifo(struct p_fifo *f, int which)
 
   switch(which){
     case FIFO_MODE_PRI:
-      fd=f->fifo_p;
+      fd=f->primary_fifo;
       f->which=ID_PRIMARY;
       break;
     case FIFO_MODE_CLI:
-      fd=f->fifo_c;
+      fd=f->clipboard_fifo;
       f->which=ID_CLIPBOARD;
       break;
     default:
@@ -158,7 +162,7 @@ int read_fifo(struct p_fifo *f, int which)
   f->buf[t]=0;
   f->rlen=t;
   if(t>0)
-    if(f->dbg) g_printf("%s: Got %d '%s'\n",f->fifo_p==fd?"PRI":"CLI",t,f->buf);
+    if(f->dbg) g_printf("%s: Got %d '%s'\n",f->primary_fifo==fd?"PRI":"CLI",t,f->buf);
   return t;
 }
 
@@ -169,11 +173,11 @@ int write_fifo(struct p_fifo *f, int which, char *buf, int len)
   switch(which){
     case FIFO_MODE_PRI:
       if(f->dbg) g_printf("Using pri fifo for write\n");
-      fd=f->fifo_p;
+      fd=f->primary_fifo;
       break;
     case FIFO_MODE_CLI:
       if(f->dbg) g_printf("Using cli fifo for write\n");
-      fd=f->fifo_c;
+      fd=f->clipboard_fifo;
       break;
     default:
       g_printf("Unknown fifo %d!\n",which);
@@ -250,12 +254,12 @@ void close_fifos(struct p_fifo *f)
 
   if(NULL != f->g_ch_p)
     g_io_channel_shutdown(f->g_ch_p,TRUE,NULL);
-  if(f->fifo_p>0)
-    close(f->fifo_p);
+  if(f->primary_fifo>0)
+    close(f->primary_fifo);
 
   if(NULL != f->g_ch_c)
     g_io_channel_shutdown(f->g_ch_c,TRUE,NULL);
-  if(f->fifo_c>0)
-    close(f->fifo_c);
+  if(f->clipboard_fifo>0)
+    close(f->clipboard_fifo);
   g_free(f);
 }
