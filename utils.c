@@ -107,36 +107,12 @@ struct cmdline_opts *parse_options(int argc, char* argv[])
       NULL
     },
     {
-      "clipboard", 'c',
-      0,
-      G_OPTION_ARG_NONE,
-      &opts->clipboard, "Print clipboard contents",
-      NULL
-    },
-    {
-      "primary", 'p',
-      0,
-      G_OPTION_ARG_NONE,
-      &opts->primary, "Print primary contents",
-      NULL
-    },
-    {
       NULL
     }
   };
 
   /* Option parsing */
   GOptionContext* context = g_option_context_new(NULL);
-  /* Set summary */
-  g_option_context_set_summary(context,
-                             "Clipboard CLI usage examples:\n\n"
-                               "  echo \"copied to clipboard\" | parcellite\n"
-                               "  parcellite \"copied to clipboard\"\n"
-                               "  echo \"copied to clipboard\" | parcellite -c");
-  /* Set description */
-  g_option_context_set_description(context,
-                                 "Written by Gilberto \"Xyhthyx\" Miralla.\n"
-                                   "Report bugs to <gpib@rickyrockrat.net>.");
   /* Add entries and parse options */
   g_option_context_add_main_entries(context, main_entries, NULL);
   g_option_context_parse(context, &argc, &argv, NULL);

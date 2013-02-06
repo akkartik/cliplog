@@ -67,16 +67,11 @@ struct pref_item {
   struct myadj *adj;
 };
 static struct pref_item dummy[2];
-static void check_toggled(GtkToggleButton *togglebutton, gpointer user_data);
 static void search_toggled(GtkToggleButton *b, gpointer user);
 static gint dbg=0;
 
 struct pref_item myprefs[]={
 /**Behaviour  */
-  /**Clipboards  */
-  {.adj=NULL,.cval=NULL,.sig="toggled",.sfunc=(GCallback)check_toggled,.sec=PREF_SEC_CLIP,.name="use_copy",.type=PREF_TYPE_TOGGLE,.desc="Use _Copy (Ctrl-C)",.tip="If checked, Use the clipboard, which is Ctrl-C, Ctrl-V",.val=DEF_USE_COPY},
-  {.adj=NULL,.cval=NULL,.sig="toggled",.sfunc=(GCallback)check_toggled,.sec=PREF_SEC_CLIP,.name="use_primary",.type=PREF_TYPE_TOGGLE,.desc="Use _Primary (Selection)",.tip="If checked, Use the primary clipboard (mouse highlight-copy, middle mouse button paste)",.val=DEF_USE_PRIMARY},
-  {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_CLIP,.name="synchronize",.type=PREF_TYPE_TOGGLE,.desc="S_ynchronize clipboards",.tip="If checked, will keep both clipboards with the same content. If primary is pasted, then copy will have the same data.",.val=DEF_SYNCHRONIZE},
   /**History  */
   {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_HIST,.name="save_history",.type=PREF_TYPE_TOGGLE,.desc="Save history",.tip="Save history to a file.",.val=DEF_SAVE_HISTORY},
   {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_HIST,.name="history_pos",.type=PREF_TYPE_TOGGLE|PREF_TYPE_SINGLE_LINE,.desc="Position history",.tip="If checked, use X, Y to position the history list",.val=0},
@@ -507,24 +502,6 @@ static void save_actions()
     gint end = 0;
     fwrite(&end, 4, 1, actions_file);
     fclose(actions_file);
-  }
-}
-
-/* Called when clipboard checks are pressed */
-static void check_toggled(GtkToggleButton *togglebutton, gpointer user_data)
-{
-  if (gtk_toggle_button_get_active((GtkToggleButton*)get_pref_widget("use_copy")) &&
-      gtk_toggle_button_get_active((GtkToggleButton*)get_pref_widget("use_primary")))
-  {
-    /* Only allow synchronize option if both primary and clipboard are enabled */
-    gtk_widget_set_sensitive((GtkWidget*)get_pref_widget("synchronize"), TRUE);
-  }
-  else
-  {
-    /* Disable synchronize option */
-    gtk_toggle_button_set_active((GtkToggleButton*)get_pref_widget("synchronize"), FALSE);
-    gtk_widget_set_sensitive((GtkWidget*)get_pref_widget("synchronize"), FALSE);
-
   }
 }
 

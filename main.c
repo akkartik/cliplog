@@ -166,9 +166,7 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
     return NULL;
   }
   /**check that our clipboards are valid and user wants to use them  */
-  if((clip != primary && clip != clipboard) ||
-    (clip == primary && !get_pref_int32("use_primary")) ||
-    (clip == clipboard && !get_pref_int32("use_copy")))
+  if(clip != clipboard)
       return NULL;
 
   if(H_MODE_CHECK==mode &&clip == primary){/*fix auto-deselect of text in applications like DevHelp and LyX*/
@@ -1051,10 +1049,7 @@ void set_clipboard_text(struct history_info *h, GList *element)
   if(NULL == find_h_item(h->delete_list,NULL,element)){ /**not in our delete list  */
     /**make a copy of txt, because it gets freed and re-allocated.  */
     gchar *txt=p_strdup(((struct history_item *)(element->data))->text);
-    if(get_pref_int32("use_copy") )
-      update_clipboard(clipboard, txt, H_MODE_LIST);
-    if(get_pref_int32("use_primary"))
-      update_clipboard(primary, txt, H_MODE_LIST);
+    update_clipboard(clipboard, txt, H_MODE_LIST);
     g_free(txt);
   }
   g_signal_emit_by_name ((gpointer)h->menu,"selection-done");
@@ -1572,47 +1567,7 @@ int main(int argc, char *argv[])
   /**get options/cmd line not parsed.  */
   if( NULL != opts->leftovers)g_print("%s\n",opts->leftovers);
   /**init fifo should set up the fifo and the callback (if we are daemon mode)  */
-    if(opts->primary) {
-      fifo=init_fifo(FIFO_MODE_PRI|mode);
-      if(fifo->dbg) g_printf("Hit PRI opt!\n");
-
-      if(PROG_MODE_CLIENT & mode){
-        if(NULL != opts->leftovers){
-          write_fifo(fifo,FIFO_MODE_PRI,opts->leftovers,strlen(opts->leftovers));
-          g_free(opts->leftovers);
-        }
-
-        if(fifo->dbg) g_printf("checking stdin\n");
-        write_stdin(fifo,FIFO_MODE_PRI);
-        usleep(1000);
-      }
-      /* Grab primary */
-      GtkClipboard* prim = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-      /* Print primary text (if any) */
-      gchar* prim_text = gtk_clipboard_wait_for_text(prim);
-      if (prim_text)
-        g_print("%s", prim_text);
-      g_free(prim_text);
-
-    }  else if(opts->clipboard){
-      fifo=init_fifo(FIFO_MODE_CLI|mode);
-
-      if(PROG_MODE_CLIENT & mode){
-        if(NULL != opts->leftovers){
-          write_fifo(fifo,FIFO_MODE_CLI,opts->leftovers,strlen(opts->leftovers));
-          g_free(opts->leftovers);
-        }
-        write_stdin(fifo,FIFO_MODE_CLI);
-        usleep(1000);
-      }
-
-      GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-      /* Print clipboard text (if any) */
-      gchar* clip_text = gtk_clipboard_wait_for_text(clip);
-      if (clip_text)
-        g_print("%s", clip_text);
-      g_free(clip_text);
-    }  else   { /*use CLIPBOARD*/
+    { /*use CLIPBOARD*/
       GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
       fifo=init_fifo(FIFO_MODE_NONE|mode);
         /* Copy from unrecognized options */
