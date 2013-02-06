@@ -22,12 +22,12 @@ GMutex* state_lock = NULL;
 glong validate_utf8_text(gchar *text, glong len)
 {
   const gchar *valid;
-  text[len]=0;
-  if(FALSE == g_utf8_validate(text,-1,&valid)) {
+  text[len] = 0;
+  if (FALSE == g_utf8_validate(text, -1, &valid)) {
     g_printf("Truncating invalid utf8 text entry: ");
-    len=valid-text;
-    text[len]=0;
-    g_printf("'%s'\n",text);
+    len = valid-text;
+    text[len] = 0;
+    g_printf("'%s'\n", text);
   }
   return len;
 }
@@ -37,7 +37,7 @@ struct history_item {
 	gchar text[8]; /**reserve 64 bits (8 bytes) for pointer to data.  */
 }__attribute__((__packed__));
 
-GList* history_list=NULL;
+GList* history_list = NULL;
 
 void log_clipboard() {
   check_dirs();
@@ -55,25 +55,25 @@ void log_clipboard() {
 struct history_item *new_clip_item(guint32 len, void *data)
 {
   struct history_item *c;
-  if(NULL == (c=g_malloc0(sizeof(struct history_item)+len))){
+  if (NULL == (c=g_malloc0(sizeof(struct history_item)+len))) {
     printf("Hit NULL for malloc of history_item!\n");
     return NULL;
   }
 
-  memcpy(c->text,data,len);
-  c->len=len;
+  memcpy(c->text, data, len);
+  c->len = len;
   return c;
 }
 
 void append_item(gchar* item)
 {
-  gint node=-1;
-  if(NULL == item)
+  gint node = -1;
+  if (NULL == item)
     return;
   g_mutex_lock(state_lock);
 
   struct history_item *c;
-  if(NULL == (c=new_clip_item(strlen(item),item)) )
+  if (NULL == (c=new_clip_item(strlen(item), item)))
     return;
 
   history_list = g_list_prepend(history_list, c);
@@ -85,20 +85,18 @@ gchar* process_new_item(gchar* ntext) {
   return validate_utf8_text(ntext, strlen(ntext)) ? ntext : NULL;
 }
 
-gchar *_update_clipboard (GtkClipboard *clip, gchar *n, gchar **old, int set)
-{
-
-  if(NULL != n) {
-    if( set)
+gchar *_update_clipboard (GtkClipboard *clip, gchar *n, gchar **old, int set) {
+  if (NULL != n) {
+    if (set)
       gtk_clipboard_set_text(clip, n, -1);
-    if(NULL != *old)
+    if (NULL != *old)
       g_free(*old);
-    *old=g_strdup(n);
+    *old = g_strdup(n);
     return *old;
-  }else{
-    if(NULL != *old)
+  } else{
+    if (NULL != *old)
       g_free(*old);
-    *old=NULL;
+    *old = NULL;
   }
 
   return NULL;
@@ -113,78 +111,78 @@ gboolean is_clipboard_empty(GtkClipboard *clip)
   return !contents;
 }
 
-gchar* update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
+gchar* update_clipboard(GtkClipboard *clip, gchar *intext,  gint mode)
 {
   /**current/last item in clipboard  */
-  static gchar *ptext=NULL;
-  static gchar *ctext=NULL;
-  static gchar *last=NULL; /**last text change, for either clipboard  */
-  gchar **existing, *changed=NULL;
+  static gchar *ptext = NULL;
+  static gchar *ctext = NULL;
+  static gchar *last = NULL; /**last text change, for either clipboard  */
+  gchar **existing, *changed = NULL;
   gchar *processed;
   GdkModifierType button_state;
-  int set=1;
-  if( H_MODE_LAST == mode)
+  int set = 1;
+  if (H_MODE_LAST == mode)
     return last;
-  existing=&ctext;
+  existing = &ctext;
 
   /**check that our clipboards are valid and user wants to use them  */
-  if(clip != clipboard)
+  if (clip != clipboard)
       return NULL;
 
   /**check for lost contents and restore if lost */
   /* Only recover lost contents if there isn't any other type of content in the clipboard */
-  if(is_clipboard_empty(clip) && NULL != *existing ) {
+  if (is_clipboard_empty(clip) && NULL != *existing) {
     gtk_clipboard_set_text(clip, *existing, -1);
-    last=*existing;
+    last = *existing;
   }
   /**check for changed clipboard content - in all modes */
-  changed=gtk_clipboard_wait_for_text(clip);
-  if(0 == g_strcmp0(*existing, changed) ){
+  changed = gtk_clipboard_wait_for_text(clip);
+  if (0 == g_strcmp0(*existing, changed)) {
     g_free(changed);                    /**no change, do nothing  */
-    changed=NULL;
+    changed = NULL;
   } else {
-    if(NULL != (processed=process_new_item(changed)) ){
-      if(0 == g_strcmp0(processed,changed)) set=0;
-      else set=1;
+    if (NULL != (processed=process_new_item(changed))) {
+      if (0 == g_strcmp0(processed, changed)) set = 0;
+      else set = 1;
 
-      last=_update_clipboard(clip,processed,existing,set);
-    }else {/**restore clipboard  */
+      last = _update_clipboard(clip, processed, existing, set);
+    } else {/**restore clipboard  */
       gchar *d;
 
-      if(NULL ==*existing && NULL != history_list){
+      if (NULL ==*existing && NULL != history_list) {
         struct history_item *c;
-        c=(struct history_item *)(history_list->data);
-        d=c->text;
-      }else
-        d=*existing;
-      if(NULL != d){
-        last=_update_clipboard(clip,d,existing,1);
+        c = (struct history_item *)(history_list->data);
+        d = c->text;
+      } else
+        d = *existing;
+      if (NULL != d) {
+        last = _update_clipboard(clip, d, existing, 1);
       }
 
     }
-    if(NULL != last)
+    if (NULL != last)
       append_item(last);
     g_free(changed);
-    changed=NULL;
+    changed = NULL;
   }
-  if( H_MODE_CHECK==mode ){
+  if (H_MODE_CHECK==mode) {
     goto done;
   }
 
-  if(H_MODE_LIST == mode && 0 != g_strcmp0(intext,*existing)){ /**just set clipboard contents. Already in list  */
-    last=_update_clipboard(clip,intext,existing,1);
-    if(NULL != last){/**maintain persistence, if set  */
+  if (H_MODE_LIST == mode && 0 != g_strcmp0(intext, *existing)) { /**just set clipboard contents. Already in list  */
+    last = _update_clipboard(clip, intext, existing, 1);
+    if (NULL != last) {/**maintain persistence, if set  */
       append_item(last);
     }
     goto done;
-  }else if(H_MODE_NEW==mode){
-    if(NULL != (processed=process_new_item(intext)) ){
-      if(0 == g_strcmp0(processed,*existing))set=0;
-      else set=1;
-      last=_update_clipboard(clip,processed,existing,set);
-      if(NULL != last)
+  } else if (H_MODE_NEW==mode) {
+    if (NULL != (processed = process_new_item(intext))) {
+      if (0 == g_strcmp0(processed, *existing)) set = 0;
+      else set = 1;
+      last = _update_clipboard(clip, processed, existing, set);
+      if (NULL != last)
         append_item(last);
-    }else
+    } else
       return NULL;
   }
 
@@ -194,22 +192,22 @@ done:
 
 void check_clipboards() {
   gchar *ptext, *ctext, *last;
-  int n=0;
-  if (state.rlen >0){
-    state.rlen=validate_utf8_text(state.buf, state.rlen);
-    if(state.dbg) g_printf("Setting CLI '%s'\n",state.buf);
+  int n = 0;
+  if (state.rlen >0) {
+    state.rlen = validate_utf8_text(state.buf, state.rlen);
+    if (state.dbg) g_printf("Setting CLI '%s'\n", state.buf);
     update_clipboard(clipboard, state.buf, H_MODE_NEW);
-    n=2;
-    state.rlen=0;
+    n = 2;
+    state.rlen = 0;
   }
 
-  ctext=update_clipboard(clipboard, NULL, H_MODE_CHECK);
+  ctext = update_clipboard(clipboard, NULL, H_MODE_CHECK);
 
-  if(NULL==ptext && NULL ==ctext) return;
-  last=update_clipboard(NULL, NULL, H_MODE_LAST);
-  if( NULL != last && 0 != g_strcmp0(ptext,ctext)){
+  if (NULL==ptext && NULL ==ctext) return;
+  last = update_clipboard(NULL, NULL, H_MODE_LAST);
+  if (NULL != last && 0 != g_strcmp0(ptext, ctext)) {
     /**last is a copy, of things that may be deallocated  */
-    last=strdup(last);
+    last = strdup(last);
     update_clipboard(clipboard, last, H_MODE_LIST);
     g_free(last);
   }
