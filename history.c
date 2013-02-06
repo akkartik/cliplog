@@ -101,49 +101,6 @@ void append_item(gchar* item, int checkdup)
 
    /* Prepend new item */
   history_list = g_list_prepend(history_list, c);
-  /* Shorten history if necessary */
-  truncate_history();
+  log_clipboard();
   g_mutex_unlock(hist_lock);
-}
-
-/* Truncates history to history_limit items, while preserving persistent data,
- * if specified by the user. FIXME: This may not shorten the history */
-void truncate_history()
-{
-  int p=get_pref_int32("persistent_history");
-  if (history_list)  {
-    guint ll=g_list_length(history_list);
-    guint lim=get_pref_int32("history_limit");
-    if(ll > lim){ /* Shorten history if necessary */
-      GList* last = g_list_last(history_list);
-      while (last->prev && ll>lim)   {
-        struct history_item *c=(struct history_item *)last->data;
-        last=last->prev;
-        if(!p || !(c->flags&CLIP_TYPE_PERSISTENT)){
-          history_list=g_list_remove(history_list,c);
-          --ll;
-        }
-      }
-    }
-
-    log_clipboard();
-  }
-}
-
-/* Returns pointer to last item in history */
-gpointer get_last_item()
-{
-  if (history_list)
-  {
-    if (history_list->data)
-    {
-      /* Return the last element */
-      gpointer last_item = history_list->data;
-      return last_item;
-    }
-    else
-      return NULL;
-  }
-  else
-    return NULL;
 }
