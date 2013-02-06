@@ -1,20 +1,4 @@
-/* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com>
- *
- * This file is part of Parcellite.
- *
- * Parcellite is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * Parcellite is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+/* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com> */
 
 #include "parcellite.h"
 #define MAX_HISTORY 1000
@@ -783,7 +767,6 @@ int add_section(int sec, GtkWidget *parent)
 
 		if(single_st && !single_is){ /**start of single line  */
 			hbox = gtk_hbox_new(FALSE, 2);  /**create hbox  */
-			/*g_printf("alloc %p hbox\n",hbox); */
 			single_is=1;
 		}
 
@@ -847,7 +830,6 @@ int add_section(int sec, GtkWidget *parent)
 		if(dbg)g_printf("Packing %s\n",myprefs[i].name);
 		if(single_is){
 			if(packit != hbox){
-				/*g_printf("Packed a slwidget %p<-%p\n",hbox, myprefs[i].w); */
 				gtk_box_pack_start((GtkBox*)hbox,myprefs[i].w , FALSE, FALSE, 0);
 			}
 			/**else already packed above.  */
@@ -859,7 +841,6 @@ int add_section(int sec, GtkWidget *parent)
 		if(single_is && !single_st){/**end of single line  */
 																							/**exp fill padding  */
 			gtk_box_pack_start((GtkBox*)parent, hbox, TRUE, TRUE, 0);		/**pack the hbox into parent  */
-			/*g_printf("pack %p<-%p hbox\n",parent,hbox); */
 			single_is=0;
 		}
 	}

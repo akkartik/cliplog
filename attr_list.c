@@ -1,36 +1,9 @@
-/* Copyright (C) 2011-2013 by rickyrockrat <gpib at rickyrockrat dot net>
- *
- * This file is part of Parcellite.
- *
- * Parcellite is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * Parcellite is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-/** \file ******************************************************************
-\n\b File:        attr_list.c
-\n\b Author:      Doug Springer
-\n\b Company:     DNK Designs Inc.
-\n\b Date:        01/09/2013  9:22 pm
-\n\b Description: General attribute changing and list manipulation routines.
-*/ /************************************************************************
-*/
+/* Copyright (C) 2011-2013 rickyrockrat <gpib at rickyrockrat dot net>, Doug
+ * Springer */
 
 #include "parcellite.h"
-/***************************************************************************/
-/** Get the underline on the given lable, or allocate new one.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
+/* Get the underline on the given lable, or allocate new one. */
 PangoAttrInt *get_underline_attr(GtkLabel *label)
 {
 	PangoAttrList *attrs=gtk_label_get_attributes (label);
@@ -48,11 +21,8 @@ PangoAttrInt *get_underline_attr(GtkLabel *label)
 	}
 	return (PangoAttrInt *)attr;
 }
-/***************************************************************************/
-/** Returns 0 if not strikethrough, 1 if it is.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
+/* Returns 0 if not strikethrough, 1 if it is. */
 gboolean is_underline(GtkLabel *label)
 {
 	PangoAttrInt *strike=get_underline_attr(label);
@@ -61,12 +31,7 @@ gboolean is_underline(GtkLabel *label)
 	return TRUE;
 }
 
-/***************************************************************************/
-/** Set the strike through on/off. Create a new strike through and/or attr
-list.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+/* Set the strike through on/off. Create a new strike through and/or attr list. */
 void set_underline(GtkLabel *label, gboolean mode)
 {
 	PangoAttrInt *strike;
@@ -83,11 +48,8 @@ void set_underline(GtkLabel *label, gboolean mode)
 		gtk_label_set_attributes (label, attrs);
 	}
 }
-/***************************************************************************/
-/** Get the strikethrough on the given lable, or allocate new one.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
+/* Get the strikethrough on the given lable, or allocate new one. */
 PangoAttrInt *get_strikethrough_attr(GtkLabel *label)
 {
 	PangoAttrList *attrs=gtk_label_get_attributes (label);
@@ -111,11 +73,7 @@ PangoAttrInt *get_strikethrough_attr(GtkLabel *label)
 	return (PangoAttrInt *)attr;
 }
 
-/***************************************************************************/
-/** Returns 0 if not strikethrough, 1 if it is.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+/** Returns 0 if not strikethrough, 1 if it is. */
 gboolean is_strikethrough(GtkLabel *label)
 {
 	PangoAttrInt *strike=get_strikethrough_attr(label);
@@ -124,12 +82,7 @@ gboolean is_strikethrough(GtkLabel *label)
 	return TRUE;
 }
 
-/***************************************************************************/
-/** Set the strike through on/off. Create a new strike through and/or attr
-list.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+/* Set the strike through on/off. Create a new strike through and/or attr list. */
 void set_strikethrough(GtkLabel *label, gboolean mode)
 {
 	PangoAttrInt *strike;
@@ -146,11 +99,8 @@ void set_strikethrough(GtkLabel *label, gboolean mode)
 		gtk_label_set_attributes (label, attrs);
 	}
 }
-/***************************************************************************/
-/** Find the item in the delete list.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
+/* Find the item in the delete list. */
 GList *find_h_item(GList *list,GtkWidget *w, GList *e)
 {
 	GList *i;
@@ -164,11 +114,7 @@ GList *find_h_item(GList *list,GtkWidget *w, GList *e)
 	return NULL;
 }
 
-/***************************************************************************/
-/** Add an item to the history delete list.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+/* Add an item to the history delete list. */
 void add_h_item(struct history_info *h, GtkWidget *w, GList* element, gint which)
 {
 	GList *ele;
@@ -200,15 +146,11 @@ void add_h_item(struct history_info *h, GtkWidget *w, GList* element, gint which
 	}
 }
 
-/***************************************************************************/
-/** Delete an item from the history delete list.
+/* Delete an item from the history delete list.
 h->delete_list is a GList. The data points to a struct s_item_info, which
 contains a widget and an element - these latter two are part of the history
 menu, so we just need to de-allocate the delete_list structure, and delete it
-from the list.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+from the list. */
 void rm_h_item(struct history_info *h, GtkWidget *w, GList* element, gint which)
 {
 	GList *i;
@@ -238,12 +180,9 @@ void rm_h_item(struct history_info *h, GtkWidget *w, GList* element, gint which)
 	}
 
 }
-/***************************************************************************/
-/** Handle marking for history window. Also manages adding/removing from
-the delete list, which gets called when the history window closes.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
+/* Handle marking for history window. Also manages adding/removing from
+the delete list, which gets called when the history window closes. */
 void handle_marking(struct history_info *h, GtkWidget *w, gint index, gint which)
 {
   GtkLabel *l=(GtkLabel *)(gtk_bin_get_child((GtkBin*)w)) ;

@@ -1,21 +1,4 @@
-/* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com>
- *
- * This file is part of Parcellite.
- *
- * Parcellite is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * Parcellite is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
+/* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com> */
 
 #include "parcellite.h"
 /**for our fifo interface  */
@@ -43,7 +26,6 @@ gchar *p_strdup( const gchar *str )
   /**use the following to test truncation  */
   /*x=get_pref_int32("data_size")*10; */
   if(TRUE ==g_utf8_validate (str,-1,NULL)){
-/*    g_printf("UTF8 "); */
     l=g_utf8_strlen(str,-1);
     u8=1;
   } else{
@@ -178,12 +160,9 @@ struct cmdline_opts *parse_options(int argc, char* argv[])
 }
 
 
-/***************************************************************************/
-/** Return a PID given a name. Used to check a if a process is running..
-if 2 or greater, process is running
-\n\b Arguments:
-\n\b Returns:	number of instances of name found
-****************************************************************************/
+/* Return a PID given a name. Used to check a if a process is running.. if 2
+ * or greater, process is running
+ * Returns:	number of instances of name found */
 int proc_find(const char* name, int mode, pid_t *pid)
 {
 	DIR* dir;
@@ -222,7 +201,6 @@ int proc_find(const char* name, int mode, pid_t *pid)
 						++instances;
 						if(NULL !=pid)
 						  *pid=lpid;
-						/*g_printf("Looking for '%s', found '%s'\n",name,buf); */
 					}
 				}
 
@@ -236,11 +214,6 @@ int proc_find(const char* name, int mode, pid_t *pid)
   return instances;
 }
 
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
 gboolean fifo_read_cb (GIOChannel *src,  GIOCondition cond, gpointer data)
 {
 	struct p_fifo *f=(struct p_fifo *)data;
@@ -267,21 +240,9 @@ gboolean fifo_read_cb (GIOChannel *src,  GIOCondition cond, gpointer data)
 
   if(f->dbg) g_printf("0x%X Waiting on chars\n",cond);
 	f->rlen=0;
-/** (	while (1) {*/
 		int s;
 
 		s=read_fifo(f,which);
-/**  		usleep(100);
-		if(-1 == s){
-			g_printf("Error reading fifo\n");
-			return 0;
-		} else if(0 == s)
-			break;
-	}
-	if(f->rlen>0){
-		g_printf("Setting fifo which\n");
-		f->which=FIFO_MODE_PRI==which?ID_PRIMARY:ID_CLIPBOARD;
-	}    */
 
 	return TRUE;
 }
@@ -303,11 +264,7 @@ gint _create_fifo(gchar *f)
 	g_free(f);
 	return i;
 }
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
 int create_fifo(void)
 {
 	gchar *f;
@@ -322,12 +279,6 @@ int create_fifo(void)
 	return i;
 }
 
-
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
 int _open_fifo(char *path, int flg)
 {
 	int fd;
@@ -339,11 +290,7 @@ int _open_fifo(char *path, int flg)
 	g_free(path);
 	return fd;
 }
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
 int open_fifos(struct p_fifo *fifo)
 {
 	int flg;
@@ -374,11 +321,6 @@ int open_fifos(struct p_fifo *fifo)
 }
 
 
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
 int read_fifo(struct p_fifo *f, int which)
 {
 	int i,t, fd;
@@ -418,11 +360,7 @@ int read_fifo(struct p_fifo *f, int which)
 	  if(f->dbg) g_printf("%s: Got %d '%s'\n",f->fifo_p==fd?"PRI":"CLI",t,f->buf);
 	return t;
 }
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
 int write_fifo(struct p_fifo *f, int which, char *buf, int len)
 {
 	int i, l,fd;
@@ -463,10 +401,6 @@ int write_fifo(struct p_fifo *f, int which, char *buf, int len)
 	return 0;
 }
 
-
-
-
-/***************************************************************************/
 /** Figure out who we are, then open the fifo accordingly.
 return the fifo file descriptor, or -1 on error
 GIOChannel*         g_io_channel_unix_new               (int fd);
@@ -476,9 +410,7 @@ guint               g_io_add_watch                      (GIOChannel *channel,
                                                          gpointer user_data);
 
 g_io_channel_shutdown(channel,TRUE,NULL);
-\n\b Arguments:
-\n\b Returns:	allocated struct or NULL on fail
-****************************************************************************/
+Returns:	allocated struct or NULL on fail */
 struct p_fifo *init_fifo(int mode)
 {
 	struct p_fifo *f=g_malloc0(sizeof(struct p_fifo));
@@ -494,8 +426,6 @@ struct p_fifo *init_fifo(int mode)
 	/**set debug here for debug messages */
 	f->dbg=1;
 	f->len=7999;
-/*	f->dbg=1; */
-/*	g_printf("My PID is %d\n",getpid()); */
 	/**we are daemon, and will launch  */
 	if(mode&PROG_MODE_DAEMON){
 		f->whoami=PROG_MODE_DAEMON;
@@ -526,11 +456,6 @@ err:
 
 }
 
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
 void close_fifos(struct p_fifo *f)
 {
 	if(NULL ==f)

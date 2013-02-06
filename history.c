@@ -1,20 +1,4 @@
-/* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com>
- *
- * This file is part of Parcellite.
- *
- * Parcellite is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * Parcellite is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+/* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com> */
 
 #include "parcellite.h"
 
@@ -39,12 +23,8 @@ static gchar* history_magics[]={
 /*#define HISTORY_FILE0 HISTORY_FILE */
 #define HISTORY_FILE0 "parcellite/hist.test"
 
-/***************************************************************************/
-/** Pass in the text via the struct. We assume len is correct, and BYTE based,
-not character.
-\n\b Arguments:
-\n\b Returns:	length of resulting string.
-****************************************************************************/
+/* Pass in the text via the struct. We assume len is correct, and BYTE based,
+ * not character. Returns	length of resulting string. */
 glong validate_utf8_text(gchar *text, glong len)
 {
 	const gchar *valid;
@@ -57,11 +37,8 @@ glong validate_utf8_text(gchar *text, glong len)
 	}
 	return len;
 }
-/***************************************************************************/
-/** Read the old history file and covert to the new format.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
+/* Read the old history file and covert to the new format. */
 void read_history_old ()
 {
   /* Build file path */
@@ -133,12 +110,8 @@ void save_history_old()
   }
 }
 
-/***************************************************************************/
-/** .
-\n\b Arguments:
-magic is what we are looking for, fmagic iw what we read from the file.
-\n\b Returns: history matched on match, -1 on erro, 0 if not found
-****************************************************************************/
+/* magic is what we are looking for, fmagic is what we read from the file.
+ * Returns: history matched on match, -1 on erro, 0 if not found */
 int check_magic(gchar *fmagic)
 {
 	gint i, rtn;
@@ -159,18 +132,13 @@ done:
 	return rtn;
 }
 
-/***************************************************************************/
 /** Reads history from ~/.local/share/parcellite/history .
-Current scheme is to have the total zize of element followed by the type, then the data
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+Current scheme is to have the total size of element followed by the type, then the data */
 void read_history ()
 {
   /* Build file path */
   gchar* history_path = g_build_filename(g_get_user_data_dir(),HISTORY_FILE0,NULL);
 	gchar *magic=g_malloc0(2+HISTORY_MAGIC_SIZE);
-  /*g_printf("History file '%s'",history_path); */
   /* Open the file for reading */
   FILE* history_file = fopen(history_path, "rb");
   g_free(history_path);
@@ -184,7 +152,6 @@ void read_history ()
 		}
     if(HISTORY_VERSION !=check_magic(magic)){
 			g_printf("Assuming old history style. Read and convert.\n");
-			/*g_printf("TODO! History version not matching!!Discarding history.\n"); */
 			g_free(magic);
 			fclose(history_file);
 			read_history_old();
@@ -248,11 +215,7 @@ last row of pixbuf=width * ((n_channels * bits_per_sample + 7) / 8)
 */
 /* Saves history to ~/.local/share/parcellite/history */
 
-/***************************************************************************/
-/** write total len, then write type, then write data.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+/* write total len, then write type, then write data. */
 void save_history()
 {
   /* Check that the directory is available */
@@ -291,11 +254,6 @@ void save_history()
   }
 }
 
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
 struct history_item *new_clip_item(gint type, guint32 len, void *data)
 {
 	struct history_item *c;
@@ -309,11 +267,10 @@ struct history_item *new_clip_item(gint type, guint32 len, void *data)
 	c->len=len;
 	return c;
 }
-/***************************************************************************/
-/**  checks to see if text is already in history. Also is a find text
-\n\b Arguments: if mode is 1, delete it too.
-\n\b Returns: -1 if not found, or nth element.
-****************************************************************************/
+
+/* checks to see if text is already in history. Also is a find text
+ * Arguments: if mode is 1, delete it too.
+ * Returns: -1 if not found, or nth element. */
 gint is_duplicate(gchar* item, int mode, gint *flags)
 {
   GList* element;
@@ -330,7 +287,6 @@ gint is_duplicate(gchar* item, int mode, gint *flags)
 					if(NULL != flags && (CLIP_TYPE_PERSISTENT&c->flags)){
 						*flags=c->flags;
 					}
-					/*g_printf("Freeing 0x%02X '%s'\n",c->flags,c->text);  */
 					g_free(element->data);
 		      history_list = g_list_delete_link(history_list, element);
 				}
@@ -341,11 +297,8 @@ gint is_duplicate(gchar* item, int mode, gint *flags)
   }
 	return -1;
 }
-/***************************************************************************/
-/**  Adds item to the end of history .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
+/*  Adds item to the end of history. */
 void append_item(gchar* item, int checkdup)
 {
 	gint flags=0,node=-1;
@@ -355,9 +308,7 @@ void append_item(gchar* item, int checkdup)
 /**delete if HIST_DEL flag is set.  */
 	if( checkdup & HIST_CHECKDUP){
 		node=is_duplicate(item, checkdup & HIST_DEL, &flags);
-		/*g_printf("isd done "); */
 		if(node > -1){ /**found it  */
-			/*g_printf(" found\n"); */
 			if(!(checkdup & HIST_DEL))
 				return;
 		}
@@ -368,10 +319,8 @@ void append_item(gchar* item, int checkdup)
 		return;
 	if(node > -1 && (checkdup & HIST_KEEP_FLAGS) ){
 		c->flags=flags;
-		/*g_printf("Restoring 0x%02X '%s'\n",c->flags,c->text);  */
 	}
 
-	/*g_printf("Append '%s'\n",item); */
    /* Prepend new item */
   history_list = g_list_prepend(history_list, c);
   /* Shorten history if necessary */
@@ -379,36 +328,8 @@ void append_item(gchar* item, int checkdup)
 	g_mutex_unlock(hist_lock);
 }
 
-/***************************************************************************/
-/**  Deletes duplicate item in history . Orphaned function.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
-void delete_duplicate(gchar* item)
-{
-  GList* element;
-	int p=get_pref_int32("persistent_history");
-  /* Go through each element compare each */
-  for (element = history_list; element != NULL; element = element->next) {
-	  struct history_item *c;
-		c=(struct history_item *)element->data;
-		if( (!p || !(CLIP_TYPE_PERSISTENT&c->flags)) && CLIP_TYPE_TEXT == c->type){
-	    if (g_strcmp0((gchar*)c->text, item) == 0) {
-				g_printf("del dup '%s'\n",c->text);
-	      g_free(element->data);
-	      history_list = g_list_delete_link(history_list, element);
-	      break;
-	    }
-		}
-  }
-}
-
-/***************************************************************************/
-/**  Truncates history to history_limit items, while preserving persistent
-    data, if specified by the user. FIXME: This may not shorten the history
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+/* Truncates history to history_limit items, while preserving persistent data,
+ * if specified by the user. FIXME: This may not shorten the history */
 void truncate_history()
 {
   int p=get_pref_int32("persistent_history");
@@ -452,11 +373,6 @@ gpointer get_last_item()
 }
 
 
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
 void clear_history( void )
 {
 
@@ -475,11 +391,7 @@ void clear_history( void )
 
   save_history();
 }
-/***************************************************************************/
-/** .
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
 int save_history_as_text(gchar *path)
 {
 	FILE* fp = fopen(path, "w");
@@ -502,11 +414,7 @@ int save_history_as_text(gchar *path)
 
 	g_printf("histpath='%s'\n",path);
 }
-/***************************************************************************/
-/** Dialog to save the history file.
-\n\b Arguments:
-\n\b Returns:
-****************************************************************************/
+
 void history_save_as(GtkMenuItem *menu_item, gpointer user_data)
 {
 	GtkWidget *dialog;
@@ -517,12 +425,8 @@ void history_save_as(GtkMenuItem *menu_item, gpointer user_data)
 				      GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
 				      NULL);
 	gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
-/*	if (user_edited_a_new_document)  { */
-	    gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), g_get_home_dir());
-	    gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), "ParcelliteHistory.txt");
-/**    }
-	else
-	  gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (dialog), filename_for_existing_document);*/
+  gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), g_get_home_dir());
+  gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), "ParcelliteHistory.txt");
 	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
 	    gchar *filename;
 	    filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
@@ -531,4 +435,3 @@ void history_save_as(GtkMenuItem *menu_item, gpointer user_data)
 	  }
 	gtk_widget_destroy (dialog);
 }
-
