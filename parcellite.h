@@ -10,7 +10,6 @@
 #define PARCELLITE_ICON PARCELLITE_PROG_NAME
 #include "daemon.h"
 #include "utils.h"
-#include "preferences.h"
 #include "main.h"
 #include "keybinder.h"
 #include "attr_list.h"

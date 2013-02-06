@@ -2,7 +2,6 @@
 
 #ifndef MAIN_H
 #define MAIN_H
-#include "preferences.h"
 G_BEGIN_DECLS
 
 extern GMutex *hist_lock;

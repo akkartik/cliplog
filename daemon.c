@@ -39,7 +39,7 @@ static void daemon_check()
     if ((primary_temp != NULL) && !(button_state & GDK_BUTTON1_MASK))
     {
       g_free(primary_text);
-      primary_text = p_strdup(primary_temp);
+      primary_text = g_strdup(primary_temp);
     }
   }
 
@@ -58,7 +58,7 @@ static void daemon_check()
   else
   {
     g_free(clipboard_text);
-    clipboard_text = p_strdup(clipboard_temp);
+    clipboard_text = g_strdup(clipboard_temp);
   }
   g_free(primary_temp);
   g_free(clipboard_temp);

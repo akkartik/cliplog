@@ -8,43 +8,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-
-/** Wrapper to replace g_strdup to limit size of text copied from clipboard.
-g_strndup will dup to the size of the limit, which will waste resources, so
-try to allocate using other methods.
-*/
-gchar *p_strdup( const gchar *str )
-{
-  gchar *n=NULL;
-  gint u8;
-  size_t l,x;
-  if(NULL == str)
-    return NULL;
-  if(0==get_pref_int32("data_size"))
-    return g_strdup(str);
-  x=get_pref_int32("data_size")*1000000;
-  /**use the following to test truncation  */
-  /*x=get_pref_int32("data_size")*10; */
-  if(TRUE ==g_utf8_validate (str,-1,NULL)){
-    l=g_utf8_strlen(str,-1);
-    u8=1;
-  } else{
-    l=strlen(str);
-    u8=0;
-  }
-
-
-  if(l>x){
-    l=x;
-  }
-
-  if(NULL !=(n=g_malloc(l+8))){
-    n[l+7]=0;
-    g_strlcpy(n,str,l+1);
-  }
-
-  return n;
-}
 /* Creates program related directories if needed */
 void check_dirs()
 {
@@ -160,6 +123,9 @@ int proc_find(const char* name, int mode, pid_t *pid)
   closedir(dir);
   return instances;
 }
+
+#define FIFO_FILE_C          "parcellite/fifo_c"
+#define FIFO_FILE_P          "parcellite/fifo_p"
 
 gboolean fifo_read_cb (GIOChannel *src,  GIOCondition cond, gpointer data)
 {

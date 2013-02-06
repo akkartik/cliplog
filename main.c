@@ -292,21 +292,14 @@ void check_clipboards(gint mode)
   ptext=update_clipboard(primary, NULL, H_MODE_CHECK);
   ctext=update_clipboard(clipboard, NULL, H_MODE_CHECK);
 
-  if (get_pref_int32("synchronize"))  {
-
-    if(NULL==ptext && NULL ==ctext)
-      goto done;
-      last=update_clipboard(NULL, NULL, H_MODE_LAST);
-    if( NULL != last && 0 != p_strcmp(ptext,ctext)){
-      /**last is a copy, of things that may be deallocated  */
-      last=strdup(last);
-      update_clipboards(last, H_MODE_LIST);
-      g_free(last);
-    }
-
+  if(NULL==ptext && NULL ==ctext) return;
+  last=update_clipboard(NULL, NULL, H_MODE_LAST);
+  if( NULL != last && 0 != p_strcmp(ptext,ctext)){
+    /**last is a copy, of things that may be deallocated  */
+    last=strdup(last);
+    update_clipboards(last, H_MODE_LIST);
+    g_free(last);
   }
-done:
-  return;
 }
 
 /* Called every CHECK_INTERVAL seconds to check for new items */
@@ -380,27 +373,28 @@ int main(int argc, char *argv[])
 
   /**get options/cmd line not parsed.  */
   if( NULL != opts->leftovers)g_print("%s\n",opts->leftovers);
-  /**init fifo should set up the fifo and the callback (if we are daemon mode)  */
-    { /*use CLIPBOARD*/
-      GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-      fifo=init_fifo(FIFO_MODE_NONE|mode);
-        /* Copy from unrecognized options */
-      if(PROG_MODE_CLIENT & mode){
-        if(NULL != opts->leftovers){
-          write_fifo(fifo,FIFO_MODE_CLI,opts->leftovers,strlen(opts->leftovers));
-          g_free(opts->leftovers);
-        }
-           /* Check if stdin is piped */
-        write_stdin(fifo,FIFO_MODE_CLI);
-        usleep(1000);
+
+  /* Set up the fifo and the callback */
+  {
+    GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    fifo=init_fifo(FIFO_MODE_NONE|mode);
+      /* Copy from unrecognized options */
+    if(PROG_MODE_CLIENT & mode){
+      if(NULL != opts->leftovers){
+        write_fifo(fifo,FIFO_MODE_CLI,opts->leftovers,strlen(opts->leftovers));
+        g_free(opts->leftovers);
       }
-
-      gchar* clip_text = gtk_clipboard_wait_for_text(clip);
-      if (clip_text)
-        g_print("%s", clip_text);
-       g_free(clip_text);
-
+         /* Check if stdin is piped */
+      write_stdin(fifo,FIFO_MODE_CLI);
+      usleep(1000);
     }
+
+    gchar* clip_text = gtk_clipboard_wait_for_text(clip);
+    if (clip_text)
+      g_print("%s", clip_text);
+     g_free(clip_text);
+  }
+
         /* Run as daemon option */
   if (opts->daemon && (PROG_MODE_DAEMON & mode))  {
     init_daemon_mode();
