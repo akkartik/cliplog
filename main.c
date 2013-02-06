@@ -1,34 +1,12 @@
 /* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com> */
 
-/* NOTES: We keep track of a delete list while the history menu is up. We
- * add/remove items from that list until we get a selection done event, then
- * we delete those items from the real history */
-
 #include "parcellite.h"
 
-
-
-GtkWidget *hmenu;
-/* Uncomment the next line to print a debug trace. */
-/*#define DEBUG   */
-
-#ifdef DEBUG
-#  define TRACE(x) x
-#else
-#  define TRACE(x) do {} while (FALSE);
-#endif
 static GtkClipboard* primary;
 static GtkClipboard* clipboard;
 struct p_fifo *fifo;
-static GtkStatusIcon *status_icon;
-static GMutex *clip_lock=NULL;
 GMutex *hist_lock=NULL;
-static gboolean actions_lock = FALSE;
-static int have_appindicator=0; /**if set, we have a running indicator-appmenu  */
-static gchar *appindicator_process="indicator-appmenu"; /**process name  */
-/**defines for moving between clipboard histories  */
-#define HIST_MOVE_TO_CANCEL     0
-#define HIST_MOVE_TO_OK         1
+
 /**clipboard handling modes  */
 #define H_MODE_INIT  0  /**clear out clipboards  */
 #define H_MODE_NEW  1 /**new text, process it  */
@@ -37,28 +15,6 @@ static gchar *appindicator_process="indicator-appmenu"; /**process name  */
 #define H_MODE_LAST  4 /**just return the last updated value.  */
 #define H_MODE_IGNORE 5 /**just put it on the clipboard, do not process
                        and do not add to hist list  */
-
-#define EDIT_MODE_USE_RIGHT_CLICK 1 /**used in edit dialog creation to determine behaviour.
-                                    If this is set, it will edit the entry, and replace it in the history.  */
-
-/**protos in this file  */
-void create_app_indicator(void);
-
-/**Turns up in 2.16  */
-int p_strcmp (const char *str1, const char *str2)
-{
-#if (GTK_MAJOR_VERSION > 2 || ( GTK_MAJOR_VERSION == 2 && GTK_MAJOR_VERSION >= 16))
-  return g_strcmp0(str1,str2);
-#else
-  if(NULL ==str1 && NULL == str2)
-    return 0;
-  if(NULL ==str1 && str2)
-    return -1;
-  if(NULL ==str2 && str1)
-    return 1;
-  return strcmp(str1,str2);
-#endif
-}
 
 /* Pass in the text via the struct. We assume len is correct, and BYTE based,
  * not character. Returns length of resulting string. */
@@ -203,12 +159,12 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
   }
   /**check for changed clipboard content - in all modes */
   changed=gtk_clipboard_wait_for_text(clip);
-  if(0 == p_strcmp(*existing, changed) ){
+  if(0 == g_strcmp0(*existing, changed) ){
     g_free(changed);                    /**no change, do nothing  */
     changed=NULL;
   } else {
     if(NULL != (processed=process_new_item(changed)) ){
-      if(0 == p_strcmp(processed,changed)) set=0;
+      if(0 == g_strcmp0(processed,changed)) set=0;
       else set=1;
 
       last=_update_clipboard(clip,processed,existing,set);
@@ -235,7 +191,7 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
     goto done;
   }
 
-  if(H_MODE_LIST == mode && 0 != p_strcmp(intext,*existing)){ /**just set clipboard contents. Already in list  */
+  if(H_MODE_LIST == mode && 0 != g_strcmp0(intext,*existing)){ /**just set clipboard contents. Already in list  */
     last=_update_clipboard(clip,intext,existing,1);
     if(NULL != last){/**maintain persistence, if set  */
       append_item(last);
@@ -243,7 +199,7 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
     goto done;
   }else if(H_MODE_NEW==mode){
     if(NULL != (processed=process_new_item(intext)) ){
-      if(0 == p_strcmp(processed,*existing))set=0;
+      if(0 == g_strcmp0(processed,*existing))set=0;
       else set=1;
       last=_update_clipboard(clip,processed,existing,set);
       if(NULL != last)
@@ -254,11 +210,6 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
 
 done:
   return *existing;
-}
-
-void update_clipboards(gchar *intext, gint mode)
-{
-  update_clipboard(clipboard, intext, mode);
 }
 
 /* Checks the clipboards and fifos for changes. */
@@ -294,10 +245,10 @@ void check_clipboards(gint mode)
 
   if(NULL==ptext && NULL ==ctext) return;
   last=update_clipboard(NULL, NULL, H_MODE_LAST);
-  if( NULL != last && 0 != p_strcmp(ptext,ctext)){
+  if( NULL != last && 0 != g_strcmp0(ptext,ctext)){
     /**last is a copy, of things that may be deallocated  */
     last=strdup(last);
-    update_clipboards(last, H_MODE_LIST);
+    update_clipboard(clipboard, last, H_MODE_LIST);
     g_free(last);
   }
 }
@@ -309,30 +260,20 @@ gboolean check_clipboards_tic(gpointer data)
   return TRUE;
 }
 
-/* Startup calls and initializations */
-static void parcellite_init()
-{
-/* Create clipboard */
-  primary = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-  clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-
-  clip_lock= g_mutex_new();
-  hist_lock= g_mutex_new();
-  g_mutex_unlock(clip_lock);
-
-  g_timeout_add(CHECK_INTERVAL, check_clipboards_tic, NULL);
-}
-
 int main(int argc, char *argv[])
 {
   gtk_init(&argc, &argv);
 
   fifo=init_fifo();
 
-  parcellite_init();
+  primary = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+  clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+  g_timeout_add(CHECK_INTERVAL, check_clipboards_tic, NULL);
+
+  hist_lock= g_mutex_new();
+
   gtk_main();
 
-  g_list_free(history_list);
   close_fifos(fifo);
   return 0;
 }
