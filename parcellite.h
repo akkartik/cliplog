@@ -6,7 +6,7 @@
 #include <gtk/gtk.h>
 #include <string.h>
 #include <unistd.h>
-#include "utils.h"
+#include "fifo.h"
 #include "main.h"
 #endif
 
