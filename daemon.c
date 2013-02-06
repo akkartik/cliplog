@@ -24,11 +24,11 @@ static void daemon_check()
   {
     /* Check contents */
     gint count;
-		GdkAtom *targets;
-		gboolean contents = gtk_clipboard_wait_for_targets(primary, &targets, &count);
-		g_free(targets);
-		/* Only recover lost contents if there isn't any other type of content in the clipboard */
-		if (!contents)
+    GdkAtom *targets;
+    gboolean contents = gtk_clipboard_wait_for_targets(primary, &targets, &count);
+    g_free(targets);
+    /* Only recover lost contents if there isn't any other type of content in the clipboard */
+    if (!contents)
       gtk_clipboard_set_text(primary, primary_text, -1);
   }
   else
@@ -48,11 +48,11 @@ static void daemon_check()
   {
     /* Check contents */
     gint count;
-		GdkAtom *targets;
-		gboolean contents = gtk_clipboard_wait_for_targets(clipboard, &targets, &count);
-		g_free(targets);
-		/* Only recover lost contents if there isn't any other type of content in the clipboard */
-		if (!contents)
+    GdkAtom *targets;
+    gboolean contents = gtk_clipboard_wait_for_targets(clipboard, &targets, &count);
+    g_free(targets);
+    /* Only recover lost contents if there isn't any other type of content in the clipboard */
+    if (!contents)
       gtk_clipboard_set_text(clipboard, clipboard_text, -1);
   }
   else
