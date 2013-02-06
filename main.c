@@ -1449,18 +1449,6 @@ static void parcellite_init()
   g_mutex_unlock(clip_lock);
   /* Read preferences */
   read_preferences();
-  /* Read history */
-  if (get_pref_int32("save_history")){
-    read_history();
-    if(NULL != history_list){
-      struct history_item *c;
-      c=(struct history_item *)(history_list->data);
-      if(is_clipboard_empty(primary))
-        update_clipboard(primary,c->text,H_MODE_LIST);
-      if(is_clipboard_empty(clipboard))
-        update_clipboard(clipboard,c->text,H_MODE_LIST);
-    }
-  }
 
   g_timeout_add(CHECK_INTERVAL, check_clipboards_tic, NULL);
 

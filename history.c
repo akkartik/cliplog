@@ -38,48 +38,6 @@ glong validate_utf8_text(gchar *text, glong len)
   return len;
 }
 
-/* Read the old history file and covert to the new format. */
-void read_history_old ()
-{
-  /* Build file path */
-  gchar* history_path = g_build_filename(g_get_user_data_dir(), HISTORY_FILE0,   NULL);
-
-  /* Open the file for reading */
-  FILE* history_file = fopen(history_path, "rb");
-  g_free(history_path);
-  /* Check that it opened and begin read */
-  if (history_file)   {
-    /* Read the size of the first item */
-    gint size=1;
-
-    /* Continue reading until size is 0 */
-    while (size)   {
-      struct history_item *c;
-      if (fread(&size, 4, 1, history_file) != 1){
-        size = 0;
-        break;
-      } else if( 0 == size )
-        break;
-      /* Malloc according to the size of the item */
-      c = (struct history_item *)g_malloc0(size+ 2+sizeof(struct history_item));
-      c->type=CLIP_TYPE_TEXT;
-      c->len=size;
-      /* Read item and add ending character */
-      if(fread(c->text, size, 1, history_file) !=1){
-        g_printf("Error reading history file entry \n");
-      }else{
-        c->text[size] = 0;
-        c->len=validate_utf8_text(c->text,c->len);
-        /* Prepend item and read next size */
-        history_list = g_list_prepend(history_list, c);
-      }
-    }
-    /* Close file and reverse the history to normal */
-    fclose(history_file);
-    history_list = g_list_reverse(history_list);
-  }
-}
-
 /* Saves history to ~/.local/share/parcellite/history */
 void save_history_old()
 {
@@ -132,68 +90,6 @@ done:
   return rtn;
 }
 
-/** Reads history from ~/.local/share/parcellite/history .
-Current scheme is to have the total size of element followed by the type, then the data */
-void read_history ()
-{
-  /* Build file path */
-  gchar* history_path = g_build_filename(g_get_user_data_dir(),HISTORY_FILE0,NULL);
-  gchar *magic=g_malloc0(2+HISTORY_MAGIC_SIZE);
-  /* Open the file for reading */
-  FILE* history_file = fopen(history_path, "rb");
-  g_free(history_path);
-  /* Check that it opened and begin read */
-  if (history_file)  {
-    /* Read the magic*/
-    guint32 size=1, end;
-    if (fread(magic,HISTORY_MAGIC_SIZE , 1, history_file) != 1){
-      g_printf("No magic! Assume no history.\n");
-      goto done;
-    }
-    if(HISTORY_VERSION !=check_magic(magic)){
-      g_printf("Assuming old history style. Read and convert.\n");
-      g_free(magic);
-      fclose(history_file);
-      read_history_old();
-      return;
-    }
-    if(dbg) g_printf("History Magic OK. Reading\n");
-    /* Continue reading until size is 0 */
-    while (size)   {
-      struct history_item *c;
-      if (fread(&size, 4, 1, history_file) != 1)
-       size = 0;
-      if(0 == size)
-        break;
-      /* Malloc according to the size of the item */
-      c = (struct history_item *)g_malloc0(size+ 1);
-      end=size-(sizeof(struct history_item)+4);
-
-      if (fread(c, sizeof(struct history_item), 1, history_file) !=1)
-        g_printf("history_read: Invalid type!");
-      if(c->len != end)
-        g_printf("len check: invalid: ex %d got %d\n",end,c->len);
-      /* Read item and add ending character */
-      if (fread(&c->text,end,1,history_file) != 1){
-        c->text[end] = 0;
-        g_printf("history_read: Invalid text!\n'%s'\n",c->text);
-      } else {
-        c->text[end] = 0;
-        c->len=validate_utf8_text(c->text,c->len);
-        if(dbg) g_printf("len %d type %d '%s'\n",c->len,c->type,c->text);
-        /* Prepend item and read next size */
-        history_list = g_list_prepend(history_list, c);
-      }
-
-    }
-done:
-    g_free(magic);
-    /* Close file and reverse the history to normal */
-    fclose(history_file);
-    history_list = g_list_reverse(history_list);
-  }
-  if(dbg) g_printf("History read done\n");
-}
 /**  NOTES:
   gint width, height, rowstride, n_channels,bits_per_sample ;
   guchar *pixels;
@@ -213,6 +109,7 @@ len of pixbuf=rowstride*(height-1)+width * ((n_channels * bits_per_sample + 7) /
 
 last row of pixbuf=width * ((n_channels * bits_per_sample + 7) / 8)
 */
+
 /* Saves history to ~/.local/share/parcellite/history */
 
 /* write total len, then write type, then write data. */
