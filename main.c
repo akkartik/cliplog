@@ -219,8 +219,7 @@ done:
 }
 
 /* Checks the clipboards and fifos for changes. */
-void check_clipboards(gint mode)
-{
+void check_clipboards() {
   gchar *ptext, *ctext, *last;
   int n=0;
   if(fifos.rlen >0){
@@ -259,13 +258,6 @@ void check_clipboards(gint mode)
   }
 }
 
-/* Called every CHECK_INTERVAL seconds to check for new items */
-gboolean check_clipboards_tic(gpointer data)
-{
-  check_clipboards(H_MODE_CHECK);
-  return TRUE;
-}
-
 int main(int argc, char *argv[])
 {
   gtk_init(&argc, &argv);
@@ -274,7 +266,7 @@ int main(int argc, char *argv[])
 
   primary = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
   clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-  g_timeout_add(CHECK_INTERVAL, check_clipboards_tic, NULL);
+  g_timeout_add(CHECK_INTERVAL, check_clipboards, NULL);
 
   hist_lock= g_mutex_new();
 
