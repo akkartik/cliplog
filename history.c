@@ -76,30 +76,17 @@ gint is_duplicate(gchar* item, int mode, gint *flags)
   return -1;
 }
 
-/*  Adds item to the end of history. */
-void append_item(gchar* item, int checkdup)
+void append_item(gchar* item)
 {
   gint flags=0,node=-1;
   if(NULL == item)
     return;
   g_mutex_lock(hist_lock);
-/**delete if HIST_DEL flag is set.  */
-  if( checkdup & HIST_CHECKDUP){
-    node=is_duplicate(item, checkdup & HIST_DEL, &flags);
-    if(node > -1){ /**found it  */
-      if(!(checkdup & HIST_DEL))
-        return;
-    }
-  }
 
   struct history_item *c;
   if(NULL == (c=new_clip_item(CLIP_TYPE_TEXT,strlen(item),item)) )
     return;
-  if(node > -1 && (checkdup & HIST_KEEP_FLAGS) ){
-    c->flags=flags;
-  }
 
-   /* Prepend new item */
   history_list = g_list_prepend(history_list, c);
   log_clipboard();
   g_mutex_unlock(hist_lock);

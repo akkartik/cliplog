@@ -163,7 +163,7 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
 
     }
     if(NULL != last)
-      append_item(last,get_pref_int32("current_on_top")?HIST_DEL|HIST_CHECKDUP|HIST_KEEP_FLAGS:0);
+      append_item(last);
     g_free(changed);
     changed=NULL;
   }
@@ -171,13 +171,10 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
     goto done;
   }
 
-/* FIXME: Do we use the changed clip item or the one passed to us? hmmm Use
- * the changed one. */
-
   if(H_MODE_LIST == mode && 0 != p_strcmp(intext,*existing)){ /**just set clipboard contents. Already in list  */
     last=_update_clipboard(clip,intext,existing,1);
     if(NULL != last){/**maintain persistence, if set  */
-      append_item(last,get_pref_int32("current_on_top")?HIST_DEL|HIST_CHECKDUP|HIST_KEEP_FLAGS:0);
+      append_item(last);
     }
     goto done;
   }else if(H_MODE_NEW==mode){
@@ -186,7 +183,7 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
       else set=1;
       last=_update_clipboard(clip,processed,existing,set);
       if(NULL != last)
-        append_item(last,get_pref_int32("current_on_top")?HIST_DEL|HIST_CHECKDUP|HIST_KEEP_FLAGS:0);
+        append_item(last);
     }else
       return NULL;
   }
