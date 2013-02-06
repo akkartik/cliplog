@@ -1899,11 +1899,7 @@ int main(int argc, char *argv[])
 {
 	struct cmdline_opts *opts;
 	int mode;
-	
-  bindtextdomain(GETTEXT_PACKAGE, PARCELLITELOCALEDIR);
-  bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-  textdomain(GETTEXT_PACKAGE);
-  
+
   /* Initiate GTK+ */
   gtk_init(&argc, &argv);
   
