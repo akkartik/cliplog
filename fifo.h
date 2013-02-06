@@ -1,14 +1,9 @@
-/* Copyright (C) 2011-2012 by rickyrockrat <gpib at rickyrockrat dot net> */
-
 #include <glib.h>
-#include <gtk/gtk.h>
-
-G_BEGIN_DECLS
 
 #define ID_PRIMARY   0
 #define ID_CLIPBOARD 1
 
-struct p_fifo {
+struct State {
 	int primary_fifo;
 	int clipboard_fifo;
 	GIOChannel *g_ch_p;
@@ -20,7 +15,7 @@ struct p_fifo {
 	gint dbg;
 };
 
-struct p_fifo* init_fifo();
-void close_fifos(struct p_fifo *p);
+extern struct State fifos;
 
-G_END_DECLS
+void init_fifos(void);
+void close_fifos(void);

@@ -12,6 +12,8 @@
 #define FIFO_MODE_PRI  0x20
 #define FIFO_MODE_CLI  0x40
 
+struct State fifos;
+
 void check_dirs() {
   gchar* data_dir = g_build_path(G_DIR_SEPARATOR_S, g_get_user_data_dir(), "cliplog",  NULL);
   if (!g_file_test(data_dir, G_FILE_TEST_EXISTS)) {
@@ -29,7 +31,7 @@ void check_dirs() {
 
 gboolean fifo_read_cb (GIOChannel *src,  GIOCondition cond, gpointer data)
 {
-  struct p_fifo *f=(struct p_fifo *)data;
+  struct State *f=(struct State *)data;
   int which;
   if(src == f->g_ch_p)
     which=FIFO_MODE_PRI;
@@ -99,8 +101,7 @@ int _open_fifo(char *path, int flg)
   return fd;
 }
 
-int open_fifos(struct p_fifo *fifo)
-{
+int open_fifos() {
   int flg;
   gchar *f;
 
@@ -108,46 +109,48 @@ int open_fifos(struct p_fifo *fifo)
   flg=O_RDWR|O_NONBLOCK;/*|O_EXCL; */
 
   f=g_build_filename(g_get_user_data_dir(), "cliplog/primary", NULL);
-  if((fifo->primary_fifo=_open_fifo(f,flg)) > 2) {
-    if(fifo->dbg) g_printf("PRI fifo %d\n",fifo->primary_fifo);
-    fifo->g_ch_p=g_io_channel_unix_new (fifo->primary_fifo);
-    g_io_add_watch (fifo->g_ch_p,G_IO_IN|G_IO_HUP,fifo_read_cb,(gpointer)fifo);
+  if ((fifos.primary_fifo=_open_fifo(f,flg)) > 2) {
+    if(fifos.dbg) g_printf("PRI fifo %d\n",fifos.primary_fifo);
+    fifos.g_ch_p=g_io_channel_unix_new (fifos.primary_fifo);
+    g_io_add_watch(fifos.g_ch_p,G_IO_IN|G_IO_HUP,fifo_read_cb, NULL);
   }
 
   f=g_build_filename(g_get_user_data_dir(), "cliplog/clipboard", NULL);
-  if((fifo->clipboard_fifo=_open_fifo(f,flg)) > 2) {
-    fifo->g_ch_c=g_io_channel_unix_new (fifo->clipboard_fifo);
-    g_io_add_watch (fifo->g_ch_c,G_IO_IN|G_IO_HUP,fifo_read_cb,(gpointer)fifo);
+  if ((fifos.clipboard_fifo=_open_fifo(f,flg)) > 2) {
+    fifos.g_ch_c=g_io_channel_unix_new (fifos.clipboard_fifo);
+    g_io_add_watch(fifos.g_ch_c,G_IO_IN|G_IO_HUP,fifo_read_cb, NULL);
   }
-  if(fifo->dbg) g_printf("CLI fifo %d PRI fifo %d\n",fifo->clipboard_fifo,fifo->primary_fifo);
-  if(fifo->clipboard_fifo <3 || fifo->primary_fifo <3)
+  if (fifos.dbg)
+    g_printf("CLI fifo %d PRI fifo %d\n",fifos.clipboard_fifo,fifos.primary_fifo);
+  if(fifos.clipboard_fifo <3 || fifos.primary_fifo <3)
     return -1;
   return 0;
 }
 
 
-int read_fifo(struct p_fifo *f, int which)
-{
+int read_fifo(int which) {
   int i,t, fd;
   i=t=0;
 
   switch(which){
     case FIFO_MODE_PRI:
-      fd=f->primary_fifo;
-      f->which=ID_PRIMARY;
+      fd=fifos.primary_fifo;
+      fifos.which=ID_PRIMARY;
       break;
     case FIFO_MODE_CLI:
-      fd=f->clipboard_fifo;
-      f->which=ID_CLIPBOARD;
+      fd=fifos.clipboard_fifo;
+      fifos.which=ID_CLIPBOARD;
       break;
     default:
       g_printf("Unknown fifo %d!\n",which);
       return -1;
   }
-  if(NULL ==f || fd <3 ||NULL == f->buf|| f->len <=0)
+
+  if(fd <3 ||NULL == fifos.buf|| fifos.len <=0)
     return -1;
+
   while(1){
-    i=read(fd,f->buf,f->len-t);
+    i=read(fd,fifos.buf,fifos.len-t);
     if(i>0)
       t+=i;
     else
@@ -159,33 +162,32 @@ int read_fifo(struct p_fifo *f, int which)
       return -1;
     }
   }
-  f->buf[t]=0;
-  f->rlen=t;
+  fifos.buf[t]=0;
+  fifos.rlen=t;
   if(t>0)
-    if(f->dbg) g_printf("%s: Got %d '%s'\n",f->primary_fifo==fd?"PRI":"CLI",t,f->buf);
+    if(fifos.dbg) g_printf("%s: Got %d '%s'\n",fifos.primary_fifo==fd?"PRI":"CLI",t,fifos.buf);
   return t;
 }
 
-int write_fifo(struct p_fifo *f, int which, char *buf, int len)
-{
+int write_fifo(int which, char *buf, int len) {
   int i, l,fd;
   l=0;
   switch(which){
     case FIFO_MODE_PRI:
-      if(f->dbg) g_printf("Using pri fifo for write\n");
-      fd=f->primary_fifo;
+      if(fifos.dbg) g_printf("Using pri fifo for write\n");
+      fd=fifos.primary_fifo;
       break;
     case FIFO_MODE_CLI:
-      if(f->dbg) g_printf("Using cli fifo for write\n");
-      fd=f->clipboard_fifo;
+      if(fifos.dbg) g_printf("Using cli fifo for write\n");
+      fd=fifos.clipboard_fifo;
       break;
     default:
       g_printf("Unknown fifo %d!\n",which);
       return -1;
   }
-  if(NULL ==f || fd <3 || NULL ==buf)
+  if(fd <3 || NULL ==buf)
     return -1;
-  if(f->dbg) g_printf("writing '%s'\n",buf);
+  if(fifos.dbg) g_printf("writing '%s'\n",buf);
   while(len){
     i=write(fd,buf,len);
     if(i>0)
@@ -206,60 +208,37 @@ int write_fifo(struct p_fifo *f, int which, char *buf, int len)
   return 0;
 }
 
-/* Figure out who we are, then open the fifo accordingly.
-
-      GIOChannel* g_io_channel_unix_new(int fd);
-
-      guint g_io_add_watch(GIOChannel *channel,
-                           G_IO_IN GIOFunc func,
-                           gpointer user_data);
-
-      g_io_channel_shutdown(channel,TRUE,NULL); */
-struct p_fifo *init_fifo()
-{
-  struct p_fifo *f=g_malloc0(sizeof(struct p_fifo));
-  if(NULL == f){
-    g_printf("Unable to allocate for fifo!!\n");
-    return NULL;
-  }
-  if(NULL == (f->buf=(gchar *)g_malloc0(8000)) ){
+void init_fifos(void) {
+  if(NULL == (fifos.buf=(gchar *)g_malloc0(8000)) ){
     g_printf("Unable to alloc 8k buffer for fifo! Command Line Input will be ignored.\n");
-    g_free(f);
-    return NULL;
+    return;
   }
   /**set debug here for debug messages */
-  f->dbg=1;
-  f->len=7999;
+  fifos.dbg=1;
+  fifos.len=7999;
 
   if(create_fifo() < 0 ){
     g_printf("error creating fifo\n");
     goto err;
   }
-  if(open_fifos(f) < 0 ){
+  if(open_fifos(&fifos) < 0 ){
     g_printf("Error opening fifo. Exit\n");
     goto err;
   }
-  return f;
+  return;
 
 err:
-  close_fifos(f);
-  return NULL;
-
+  close_fifos();
 }
 
-void close_fifos(struct p_fifo *f)
-{
-  if(NULL ==f)
-    return;
+void close_fifos(void) {
+  if(NULL != fifos.g_ch_p)
+    g_io_channel_shutdown(fifos.g_ch_p,TRUE,NULL);
+  if(fifos.primary_fifo>0)
+    close(fifos.primary_fifo);
 
-  if(NULL != f->g_ch_p)
-    g_io_channel_shutdown(f->g_ch_p,TRUE,NULL);
-  if(f->primary_fifo>0)
-    close(f->primary_fifo);
-
-  if(NULL != f->g_ch_c)
-    g_io_channel_shutdown(f->g_ch_c,TRUE,NULL);
-  if(f->clipboard_fifo>0)
-    close(f->clipboard_fifo);
-  g_free(f);
+  if(NULL != fifos.g_ch_c)
+    g_io_channel_shutdown(fifos.g_ch_c,TRUE,NULL);
+  if(fifos.clipboard_fifo>0)
+    close(fifos.clipboard_fifo);
 }

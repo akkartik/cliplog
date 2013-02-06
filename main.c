@@ -2,14 +2,15 @@
 
 #include "fifo.h"
 
+#include <gtk/gtk.h>
+
 #include <string.h>
 #include <unistd.h>
 
 #define CHECK_INTERVAL 500
 
-static GtkClipboard* primary;
-static GtkClipboard* clipboard;
-struct p_fifo *fifo;
+GtkClipboard* primary;
+GtkClipboard* clipboard;
 GMutex *hist_lock=NULL;
 
 /**clipboard handling modes  */
@@ -222,26 +223,26 @@ void check_clipboards(gint mode)
 {
   gchar *ptext, *ctext, *last;
   int n=0;
-  if(fifo->rlen >0){
-    switch(fifo->which){
+  if(fifos.rlen >0){
+    switch(fifos.which){
       case ID_PRIMARY:
-        fifo->rlen=validate_utf8_text(fifo->buf, fifo->rlen);
-        if(fifo->dbg) g_printf("Setting PRI '%s'\n",fifo->buf);
-        update_clipboard(primary, fifo->buf, H_MODE_NEW);
-        fifo->rlen=0;
+        fifos.rlen=validate_utf8_text(fifos.buf, fifos.rlen);
+        if(fifos.dbg) g_printf("Setting PRI '%s'\n",fifos.buf);
+        update_clipboard(primary, fifos.buf, H_MODE_NEW);
+        fifos.rlen=0;
         n=1;
         break;
       case ID_CLIPBOARD:
-        fifo->rlen=validate_utf8_text(fifo->buf, fifo->rlen);
-        if(fifo->dbg) g_printf("Setting CLI '%s'\n",fifo->buf);
-        update_clipboard(clipboard, fifo->buf, H_MODE_NEW);
+        fifos.rlen=validate_utf8_text(fifos.buf, fifos.rlen);
+        if(fifos.dbg) g_printf("Setting CLI '%s'\n",fifos.buf);
+        update_clipboard(clipboard, fifos.buf, H_MODE_NEW);
         n=2;
-        fifo->rlen=0;
+        fifos.rlen=0;
         break;
       default:
-        fifo->rlen=validate_utf8_text(fifo->buf, fifo->rlen);
-        g_printf("CLIP not set, discarding '%s'\n",fifo->buf);
-        fifo->rlen=0;
+        fifos.rlen=validate_utf8_text(fifos.buf, fifos.rlen);
+        g_printf("CLIP not set, discarding '%s'\n",fifos.buf);
+        fifos.rlen=0;
         break;
     }
   }
@@ -269,7 +270,7 @@ int main(int argc, char *argv[])
 {
   gtk_init(&argc, &argv);
 
-  fifo=init_fifo();
+  init_fifos();
 
   primary = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
   clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
@@ -279,6 +280,6 @@ int main(int argc, char *argv[])
 
   gtk_main();
 
-  close_fifos(fifo);
+  close_fifos();
   return 0;
 }
