@@ -2,15 +2,7 @@
 
 #include "parcellite.h"
 
-
-/**This is now a gslist of   */
 GList* history_list=NULL;
-#define HISTORY_MAGIC_SIZE 32
-#define HISTORY_VERSION     1 /**index (-1) into array below  */
-static gchar* history_magics[]={
-                                "1.0ParcelliteHistoryFile",
-                                NULL,
-};
 
 /* Pass in the text via the struct. We assume len is correct, and BYTE based,
  * not character. Returns length of resulting string. */
@@ -27,43 +19,17 @@ glong validate_utf8_text(gchar *text, glong len)
   return len;
 }
 
-/* write total len, then write type, then write data. */
-void save_history()
-{
-  /* Check that the directory is available */
+void save_history() {
   check_dirs();
-  /* Build file path */
-  gchar* history_path = g_build_filename(g_get_user_data_dir(), HISTORY_FILE, NULL);
-  /* Open the file for writing */
-  FILE* history_file = fopen(history_path, "wb");
-  g_free(history_path);
-  /* Check that it opened and begin write */
-  if (history_file)  {
-    GList* element;
-    gchar *magic=g_malloc0(2+HISTORY_MAGIC_SIZE);
-    if( NULL == magic) return;
-    memcpy(magic,history_magics[HISTORY_VERSION-1],strlen(history_magics[HISTORY_VERSION-1]));
-    fwrite(magic,HISTORY_MAGIC_SIZE,1,history_file);
-    /* Write each element to a binary file */
-    for (element = history_list; element != NULL; element = element->next) {
-      struct history_item *c;
-      gint32 len;
-      /* Create new GString from element data, write its length (size)
-       * to file followed by the element data itself
-       */
-      c=(struct history_item *)element->data;
-      /**write total len  */
-      /**write total len  */
-      len=c->len+sizeof(struct history_item)+4;
-      fwrite(&len,4,1,history_file);
-      fwrite(c,sizeof(struct history_item),1,history_file);
-      fwrite(c->text,c->len,1,history_file);
-    }
-    /* Write 0 to indicate end of file */
-    gint end = 0;
-    fwrite(&end, 4, 1, history_file);
-    fclose(history_file);
-  }
+  static gchar* history_path = NULL;
+  if (!history_path)
+      history_path = g_build_filename(g_get_user_data_dir(), "clipboard_log", NULL);
+  FILE* history_file = fopen(history_path, "a");
+  if (!history_file) return;
+  /* Write most recent element */
+  fprintf(history_file, "%s: %s\n", "AA: ",
+      ((struct history_item*)history_list->data)->text);
+  fclose(history_file);
 }
 
 struct history_item *new_clip_item(gint type, guint32 len, void *data)
