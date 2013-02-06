@@ -8,22 +8,10 @@ G_BEGIN_DECLS
 #define CONFIG_DIR  PARCELLITE_PROG_NAME
 #define DATA_DIR    PARCELLITE_PROG_NAME
 
-struct cmdline_opts {
-	gboolean daemon;
-	gboolean clipboard;
-	gboolean primary;
-	gboolean exit;
-	gchar *leftovers;
-	gint appindicator;
-};
-
-gchar *p_strdup( const gchar *str );
 void check_dirs();
 
 struct cmdline_opts *parse_options(int argc, char* argv[]);
 
-#define PROG_MODE_CLIENT 2
-#define PROG_MODE_DAEMON 1
 #define FIFO_MODE_NONE 0x10
 #define FIFO_MODE_PRI  0x20
 #define FIFO_MODE_CLI  0x40

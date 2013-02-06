@@ -8,10 +8,8 @@
 #include <unistd.h>
 #define PARCELLITE_PROG_NAME "parcellite"
 #define PARCELLITE_ICON PARCELLITE_PROG_NAME
-#include "daemon.h"
 #include "utils.h"
 #include "main.h"
-#include "keybinder.h"
 #include "attr_list.h"
 #endif
 

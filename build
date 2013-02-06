@@ -4,8 +4,5 @@ set -v
 CFLAGS=`pkg-config --cflags gtk+-2.0`
 gcc -g -O2 $CFLAGS -c -o main.o main.c
 gcc -g -O2 $CFLAGS -c -o utils.o utils.c
-gcc -g -O2 $CFLAGS -c -o daemon.o daemon.c
-gcc -g -O2 $CFLAGS -c -o keybinder.o keybinder.c
-gcc -g -O2 $CFLAGS -c -o eggaccelerators.o eggaccelerators.c
 gcc -g -O2 $CFLAGS -c -o attr_list.o attr_list.c
-gcc -g -O2  -o parcellite main.o utils.o daemon.o keybinder.o eggaccelerators.o attr_list.o -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lgio-2.0 -lpangoft2-1.0 -lpangocairo-1.0 -lgdk_pixbuf-2.0 -lcairo -lpango-1.0 -lfreetype -lgobject-2.0 -lglib-2.0    -lX11 -lgdk-x11-2.0 -lpango-1.0 -lgobject-2.0 -lglib-2.0
+gcc -g -O2  -o parcellite main.o utils.o attr_list.o -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lgio-2.0 -lpangoft2-1.0 -lpangocairo-1.0 -lgdk_pixbuf-2.0 -lcairo -lpango-1.0 -lfreetype -lgobject-2.0 -lglib-2.0    -lX11 -lgdk-x11-2.0 -lpango-1.0 -lgobject-2.0 -lglib-2.0
