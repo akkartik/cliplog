@@ -5,8 +5,6 @@
 
 G_BEGIN_DECLS
 #include "parcellite.h"
-#define CONFIG_DIR  PARCELLITE_PROG_NAME
-#define DATA_DIR    PARCELLITE_PROG_NAME
 
 void check_dirs();
 

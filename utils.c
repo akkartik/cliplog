@@ -8,32 +8,20 @@
 #include <fcntl.h>
 #include <errno.h>
 
-/* Creates program related directories if needed */
-void check_dirs()
-{
-  gchar* data_dir = g_build_path(G_DIR_SEPARATOR_S, g_get_user_data_dir(), DATA_DIR,  NULL);
-  gchar* config_dir = g_build_path(G_DIR_SEPARATOR_S, g_get_user_config_dir(), CONFIG_DIR,  NULL);
-  /* Check if data directory exists */
-  if (!g_file_test(data_dir, G_FILE_TEST_EXISTS))
-  {
-    /* Try to make data directory */
+void check_dirs() {
+  gchar* data_dir = g_build_path(G_DIR_SEPARATOR_S, g_get_user_data_dir(), "cliplog",  NULL);
+  if (!g_file_test(data_dir, G_FILE_TEST_EXISTS)) {
     if (g_mkdir_with_parents(data_dir, 0755) != 0)
       g_warning("Couldn't create directory: %s\n", data_dir);
   }
-  /* Check if config directory exists */
-  if (!g_file_test(config_dir, G_FILE_TEST_EXISTS))
-  {
-    /* Try to make config directory */
+  gchar* config_dir = g_build_path(G_DIR_SEPARATOR_S, g_get_user_config_dir(), "cliplog",  NULL);
+  if (!g_file_test(config_dir, G_FILE_TEST_EXISTS)) {
     if (g_mkdir_with_parents(config_dir, 0755) != 0)
       g_warning("Couldn't create directory: %s\n", config_dir);
   }
-  /* Cleanup */
   g_free(data_dir);
   g_free(config_dir);
 }
-
-#define FIFO_FILE_C          "parcellite/fifo_c"
-#define FIFO_FILE_P          "parcellite/fifo_p"
 
 gboolean fifo_read_cb (GIOChannel *src,  GIOCondition cond, gpointer data)
 {
@@ -86,10 +74,10 @@ int create_fifo(void)
   gchar *f;
   int i=0;
   check_dirs();
-  f=g_build_filename(g_get_user_data_dir(), FIFO_FILE_C, NULL);
+  f=g_build_filename(g_get_user_data_dir(), "cliplog/clipboard", NULL);
   if(-1 ==  _create_fifo(f) )
     --i;
-  f=g_build_filename(g_get_user_data_dir(), FIFO_FILE_P, NULL);
+  f=g_build_filename(g_get_user_data_dir(), "cliplog/primary", NULL);
   if(-1 ==  _create_fifo(f) )
     --i;
   return i;
@@ -115,14 +103,14 @@ int open_fifos(struct p_fifo *fifo)
   /* if you set O_RDONLY, you get 100%cpu usage from HUP */
   flg=O_RDWR|O_NONBLOCK;/*|O_EXCL; */
 
-  f=g_build_filename(g_get_user_data_dir(), FIFO_FILE_P, NULL);
+  f=g_build_filename(g_get_user_data_dir(), "cliplog/primary", NULL);
   if((fifo->fifo_p=_open_fifo(f,flg)) > 2) {
     if(fifo->dbg) g_printf("PRI fifo %d\n",fifo->fifo_p);
     fifo->g_ch_p=g_io_channel_unix_new (fifo->fifo_p);
     g_io_add_watch (fifo->g_ch_p,G_IO_IN|G_IO_HUP,fifo_read_cb,(gpointer)fifo);
   }
 
-  f=g_build_filename(g_get_user_data_dir(), FIFO_FILE_C, NULL);
+  f=g_build_filename(g_get_user_data_dir(), "cliplog/clipboard", NULL);
   if((fifo->fifo_c=_open_fifo(f,flg)) > 2) {
     fifo->g_ch_c=g_io_channel_unix_new (fifo->fifo_c);
     g_io_add_watch (fifo->g_ch_c,G_IO_IN|G_IO_HUP,fifo_read_cb,(gpointer)fifo);
@@ -239,7 +227,6 @@ struct p_fifo *init_fifo()
   f->dbg=1;
   f->len=7999;
 
-  if(f->dbg) g_printf("running parcellite not found\n");
   if(create_fifo() < 0 ){
     g_printf("error creating fifo\n");
     goto err;

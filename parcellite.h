@@ -6,8 +6,6 @@
 #include <gtk/gtk.h>
 #include <string.h>
 #include <unistd.h>
-#define PARCELLITE_PROG_NAME "parcellite"
-#define PARCELLITE_ICON PARCELLITE_PROG_NAME
 #include "utils.h"
 #include "main.h"
 #endif
