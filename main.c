@@ -1,6 +1,6 @@
 /* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com> */
 
-#include "fifo.h"
+#include "state.h"
 
 #include <gtk/gtk.h>
 
@@ -195,12 +195,12 @@ done:
 void check_clipboards() {
   gchar *ptext, *ctext, *last;
   int n=0;
-  if (fifos.rlen >0){
-    fifos.rlen=validate_utf8_text(fifos.buf, fifos.rlen);
-    if(fifos.dbg) g_printf("Setting CLI '%s'\n",fifos.buf);
-    update_clipboard(clipboard, fifos.buf, H_MODE_NEW);
+  if (state.rlen >0){
+    state.rlen=validate_utf8_text(state.buf, state.rlen);
+    if(state.dbg) g_printf("Setting CLI '%s'\n",state.buf);
+    update_clipboard(clipboard, state.buf, H_MODE_NEW);
     n=2;
-    fifos.rlen=0;
+    state.rlen=0;
   }
 
   ctext=update_clipboard(clipboard, NULL, H_MODE_CHECK);
@@ -219,7 +219,7 @@ int main(int argc, char *argv[])
 {
   gtk_init(&argc, &argv);
 
-  init_fifos();
+  init_state();
 
   clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
   g_timeout_add(500/*ms*/, check_clipboards, NULL);
@@ -228,6 +228,6 @@ int main(int argc, char *argv[])
 
   gtk_main();
 
-  close_fifos();
+  close_state();
   return 0;
 }
