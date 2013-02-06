@@ -60,6 +60,70 @@ int p_strcmp (const char *str1, const char *str2)
 #endif
 }
 
+/* Pass in the text via the struct. We assume len is correct, and BYTE based,
+ * not character. Returns length of resulting string. */
+glong validate_utf8_text(gchar *text, glong len)
+{
+  const gchar *valid;
+  text[len]=0;
+  if(FALSE == g_utf8_validate(text,-1,&valid)) {
+    g_printf("Truncating invalid utf8 text entry: ");
+    len=valid-text;
+    text[len]=0;
+    g_printf("'%s'\n",text);
+  }
+  return len;
+}
+
+struct history_item {
+	guint32 len; /**length of data item, MUST be first in structure  */
+	gchar text[8]; /**reserve 64 bits (8 bytes) for pointer to data.  */
+}__attribute__((__packed__));
+
+GList* history_list=NULL;
+
+void log_clipboard() {
+  check_dirs();
+  static gchar* history_path = NULL;
+  if (!history_path)
+      history_path = g_build_filename(g_get_user_data_dir(), "clipboard_log", NULL);
+  FILE* history_file = fopen(history_path, "a");
+  if (!history_file) return;
+  /* Write most recent element */
+  fprintf(history_file, "%s: %s\n", "AA: ",
+      ((struct history_item*)history_list->data)->text);
+  fclose(history_file);
+}
+
+struct history_item *new_clip_item(guint32 len, void *data)
+{
+  struct history_item *c;
+  if(NULL == (c=g_malloc0(sizeof(struct history_item)+len))){
+    printf("Hit NULL for malloc of history_item!\n");
+    return NULL;
+  }
+
+  memcpy(c->text,data,len);
+  c->len=len;
+  return c;
+}
+
+void append_item(gchar* item)
+{
+  gint node=-1;
+  if(NULL == item)
+    return;
+  g_mutex_lock(hist_lock);
+
+  struct history_item *c;
+  if(NULL == (c=new_clip_item(strlen(item),item)) )
+    return;
+
+  history_list = g_list_prepend(history_list, c);
+  log_clipboard();
+  g_mutex_unlock(hist_lock);
+}
+
 gchar* process_new_item(gchar* ntext) {
   return validate_utf8_text(ntext, strlen(ntext)) ? ntext : NULL;
 }
@@ -194,7 +258,6 @@ done:
 
 void update_clipboards(gchar *intext, gint mode)
 {
-  update_clipboard(primary, intext, mode);
   update_clipboard(clipboard, intext, mode);
 }
 
@@ -245,144 +308,12 @@ void check_clipboards(gint mode)
 done:
   return;
 }
+
 /* Called every CHECK_INTERVAL seconds to check for new items */
 gboolean check_clipboards_tic(gpointer data)
 {
   check_clipboards(H_MODE_CHECK);
   return TRUE;
-}
-
-/* Thread function called for each action performed */
-static void *execute_action(void *command)
-{
-  /* Execute action */
-  actions_lock = TRUE;
-  if(system((gchar*)command))
-    g_print("sytem command '%s' failed\n",(gchar *)command);
-  actions_lock = FALSE;
-  g_free((gchar*)command);
-  /* Exit this thread */
-  pthread_exit(NULL);
-}
-
-/* Called when execution action exits */
-static void action_exit(GPid pid, gint status, gpointer data)
-{
-  g_spawn_close_pid(pid);
-  actions_lock = FALSE;
-}
-
-/* Called when an action is selected from actions menu */
-static void action_selected(GtkButton *button, gpointer user_data)
-{
-  /* Change icon and enable lock */
-  actions_lock = TRUE;
-  /* Insert clipboard into command (user_data), and prepare it for execution */
-  gchar* clipboard_text = gtk_clipboard_wait_for_text(clipboard);
-  gchar* command=g_strdup_printf((gchar *)user_data,clipboard_text);
-  g_free(clipboard_text);
-  g_free(user_data);
-  gchar* shell_command = g_shell_quote(command);
-  g_free(command);
-  gchar* cmd = g_strconcat("/bin/sh -c ", shell_command, NULL);
-  g_free(shell_command);
-
-  /* Execute action */
-  GPid pid;
-  gchar **argv;
-  g_shell_parse_argv(cmd, NULL, &argv, NULL);
-  g_free(cmd);
-  g_spawn_async(NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &pid, NULL);
-  g_child_watch_add(pid, (GChildWatchFunc)action_exit, NULL);
-  g_strfreev(argv);
-}
-
-/* Called when Edit Actions is selected from actions menu */
-static void edit_actions_selected(GtkButton *button, gpointer user_data)
-{
-  /* This helps prevent multiple instances */
-  if (!gtk_grab_get_current())
-    /* Show the preferences dialog on the actions tab */
-    show_preferences(ACTIONS_TAB);
-}
-
-/* Set the background color of the widget. */
-void set_widget_bg(gchar *color, GtkWidget *w)
-{
-  GdkColor c, *cp;
-  GtkRcStyle *st;
-  if(NULL != color){
-    gdk_color_parse (color, &c);
-    cp=&c;
-  }else
-    cp=NULL;
-
-  gtk_widget_modify_bg(w, GTK_STATE_NORMAL, cp);
-  return;
-}
-
-/* position the history dialog  - should only be called if get_pref_int32("history_pos") is set */
-void postition_history(GtkMenu *menu,gint *x,gint *y,gboolean *push_in, gpointer user_data)
-{
-  GdkScreen *s;
-  gint sx,sy;
-  s=gdk_screen_get_default();
-  sx= gdk_screen_get_width(s);
-  sy= gdk_screen_get_height(s);
-  if(NULL !=push_in)
-    *push_in=FALSE;
-  if(1 == GPOINTER_TO_INT(user_data)){
-    if(NULL !=x) *x=sx;
-    if(NULL !=y) *y=sy;
-  }else{
-    if(get_pref_int32("history_pos")){
-      int xx,yy;
-      if(get_pref_int32("history_x") > get_pref_int32("item_length") )
-        xx=get_pref_int32("history_x")-get_pref_int32("item_length");
-      else
-        xx=1;
-      if(get_pref_int32("history_y") > get_pref_int32("history_limit") )
-        yy=get_pref_int32("history_y")-get_pref_int32("history_limit");
-      else
-        yy=1;
-      if(NULL !=x) *x=xx;
-      if(NULL !=y) *y=yy;
-      TRACE(g_print("x=%d, y=%d\n",xx,yy));
-    }
-
-  }
-
-}
-
-/* Set clipboard from history list. */
-void set_clipboard_text(struct history_info *h, GList *element)
-{
-  if(NULL == find_h_item(h->delete_list,NULL,element)){ /**not in our delete list  */
-    /**make a copy of txt, because it gets freed and re-allocated.  */
-    gchar *txt=p_strdup(((struct history_item *)(element->data))->text);
-    update_clipboard(clipboard, txt, H_MODE_LIST);
-    g_free(txt);
-  }
-  g_signal_emit_by_name ((gpointer)h->menu,"selection-done");
-
-  if (get_pref_int32("automatic_paste")) { /** mousedown 2 */
-    gchar *action=NULL;
-    if(get_pref_int32("auto_mouse"))
-      action="mousedown 2 && xdotool mouseup 2'";
-    else if(get_pref_int32("auto_key"))
-      action="key ctrl+v'";
-    if(NULL == action)
-      return;
-    /**from clipit 1.4.1 */
-    gchar* cmd = g_strconcat("/bin/sh -c 'xdotool ", action, NULL);
-    GPid pid;
-    gchar **argv;
-    g_shell_parse_argv(cmd, NULL, &argv, NULL);
-    g_free(cmd);
-    g_spawn_async(NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &pid, NULL);
-    g_child_watch_add(pid, (GChildWatchFunc)action_exit, NULL);
-    g_strfreev(argv);
-  }/**end from clipit 1.4.1 */
 }
 
 /* Startup calls and initializations */
@@ -398,8 +329,6 @@ static void parcellite_init()
   clip_lock= g_mutex_new();
   hist_lock= g_mutex_new();
   g_mutex_unlock(clip_lock);
-  /* Read preferences */
-  read_preferences();
 
   g_timeout_add(CHECK_INTERVAL, check_clipboards_tic, NULL);
 }
