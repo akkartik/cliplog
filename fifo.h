@@ -1,7 +1,7 @@
 #include <glib.h>
 
-#define ID_PRIMARY   0
-#define ID_CLIPBOARD 1
+#define PRIMARY 1
+#define CLIPBOARD 2
 
 struct State {
 	int primary_fifo;

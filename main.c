@@ -7,11 +7,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#define CHECK_INTERVAL 500
-
 GtkClipboard* primary;
 GtkClipboard* clipboard;
-GMutex *hist_lock=NULL;
+
+GMutex* state_lock = NULL;
 
 /**clipboard handling modes  */
 #define H_MODE_INIT  0  /**clear out clipboards  */
@@ -75,7 +74,7 @@ void append_item(gchar* item)
   gint node=-1;
   if(NULL == item)
     return;
-  g_mutex_lock(hist_lock);
+  g_mutex_lock(state_lock);
 
   struct history_item *c;
   if(NULL == (c=new_clip_item(strlen(item),item)) )
@@ -83,7 +82,7 @@ void append_item(gchar* item)
 
   history_list = g_list_prepend(history_list, c);
   log_clipboard();
-  g_mutex_unlock(hist_lock);
+  g_mutex_unlock(state_lock);
 }
 
 gchar* process_new_item(gchar* ntext) {
@@ -224,14 +223,14 @@ void check_clipboards() {
   int n=0;
   if(fifos.rlen >0){
     switch(fifos.which){
-      case ID_PRIMARY:
+      case PRIMARY:
         fifos.rlen=validate_utf8_text(fifos.buf, fifos.rlen);
         if(fifos.dbg) g_printf("Setting PRI '%s'\n",fifos.buf);
         update_clipboard(primary, fifos.buf, H_MODE_NEW);
         fifos.rlen=0;
         n=1;
         break;
-      case ID_CLIPBOARD:
+      case CLIPBOARD:
         fifos.rlen=validate_utf8_text(fifos.buf, fifos.rlen);
         if(fifos.dbg) g_printf("Setting CLI '%s'\n",fifos.buf);
         update_clipboard(clipboard, fifos.buf, H_MODE_NEW);
@@ -266,9 +265,9 @@ int main(int argc, char *argv[])
 
   primary = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
   clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-  g_timeout_add(CHECK_INTERVAL, check_clipboards, NULL);
+  g_timeout_add(500/*ms*/, check_clipboards, NULL);
 
-  hist_lock= g_mutex_new();
+  state_lock = g_mutex_new();
 
   gtk_main();
 

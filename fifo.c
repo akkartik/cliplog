@@ -8,10 +8,6 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#define FIFO_MODE_NONE 0x10
-#define FIFO_MODE_PRI  0x20
-#define FIFO_MODE_CLI  0x40
-
 struct State fifos;
 
 void check_dirs() {
@@ -29,41 +25,38 @@ void check_dirs() {
   g_free(config_dir);
 }
 
-gboolean fifo_read_cb (GIOChannel *src,  GIOCondition cond, gpointer data)
-{
-  struct State *f=(struct State *)data;
+gboolean fifo_read_cb (GIOChannel *src, GIOCondition cond, gpointer unused) {
   int which;
-  if(src == f->g_ch_p)
-    which=FIFO_MODE_PRI;
-  else if(src == f->g_ch_c)
-    which=FIFO_MODE_CLI;
+  if(src == fifos.g_ch_p)
+    which = PRIMARY;
+  else if(src == fifos.g_ch_c)
+    which = CLIPBOARD;
   else{
     g_printf("Unable to determine fifo!!\n");
     return 0;
   }
   if(cond & G_IO_HUP){
-    if(f->dbg) g_printf("gothup ");
+    if(fifos.dbg) g_printf("gothup ");
     return FALSE;
   }
   if(cond & G_IO_NVAL){
-    if(f->dbg) g_printf("readnd ");
+    if(fifos.dbg) g_printf("readnd ");
     return FALSE;
   }
   if(cond & G_IO_IN){
-    if(f->dbg) g_printf("norm ");
+    if(fifos.dbg) g_printf("norm ");
   }
 
-  if(f->dbg) g_printf("0x%X Waiting on chars\n",cond);
-  f->rlen=0;
+  if(fifos.dbg) g_printf("0x%X Waiting on chars\n",cond);
+  fifos.rlen=0;
     int s;
 
-    s=read_fifo(f,which);
+  read_fifo(which);
 
   return TRUE;
 }
 
-gint _create_fifo(gchar *f)
-{
+gint _create_fifo(gchar *f) {
   int i=0;
   if(0 == access(f,F_OK)  )
     unlink(f);
@@ -133,13 +126,13 @@ int read_fifo(int which) {
   i=t=0;
 
   switch(which){
-    case FIFO_MODE_PRI:
+    case PRIMARY:
       fd=fifos.primary_fifo;
-      fifos.which=ID_PRIMARY;
+      fifos.which=PRIMARY;
       break;
-    case FIFO_MODE_CLI:
+    case CLIPBOARD:
       fd=fifos.clipboard_fifo;
-      fifos.which=ID_CLIPBOARD;
+      fifos.which=CLIPBOARD;
       break;
     default:
       g_printf("Unknown fifo %d!\n",which);
@@ -173,11 +166,11 @@ int write_fifo(int which, char *buf, int len) {
   int i, l,fd;
   l=0;
   switch(which){
-    case FIFO_MODE_PRI:
+    case PRIMARY:
       if(fifos.dbg) g_printf("Using pri fifo for write\n");
       fd=fifos.primary_fifo;
       break;
-    case FIFO_MODE_CLI:
+    case CLIPBOARD:
       if(fifos.dbg) g_printf("Using cli fifo for write\n");
       fd=fifos.clipboard_fifo;
       break;
