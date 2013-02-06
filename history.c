@@ -5,23 +5,12 @@
 
 /**This is now a gslist of   */
 GList* history_list=NULL;
-static gint dbg=0;
-/**todo:
-handle parcellite history magic:
-if it does not exist, then we assume original format, and convert.
-  Need to provide a menu item that allows user to convert back to old?
-  or just provide manual instructions to convert back (i.e. dd skip)?
-
-  */
 #define HISTORY_MAGIC_SIZE 32
 #define HISTORY_VERSION     1 /**index (-1) into array below  */
 static gchar* history_magics[]={
                                 "1.0ParcelliteHistoryFile",
                                 NULL,
 };
-
-/*#define HISTORY_FILE0 HISTORY_FILE */
-#define HISTORY_FILE0 "parcellite/hist.test"
 
 /* Pass in the text via the struct. We assume len is correct, and BYTE based,
  * not character. Returns length of resulting string. */
@@ -38,87 +27,13 @@ glong validate_utf8_text(gchar *text, glong len)
   return len;
 }
 
-/* Saves history to ~/.local/share/parcellite/history */
-void save_history_old()
-{
-  /* Check that the directory is available */
-  check_dirs();
-  /* Build file path */
-  gchar* history_path = g_build_filename(g_get_user_data_dir(),HISTORY_FILE0, NULL);
-  /* Open the file for writing */
-  FILE* history_file = fopen(history_path, "wb");
-  g_free(history_path);
-  /* Check that it opened and begin write */
-  if (history_file)  {
-    GList* element;
-    /* Write each element to a binary file */
-    for (element = history_list; element != NULL; element = element->next) {
-      /* Create new GString from element data, write its length (size)
-       * to file followed by the element data itself
-       */
-      GString* item = g_string_new((gchar*)element->data);
-      fwrite(&(item->len), 4, 1, history_file);
-      fputs(item->str, history_file);
-      g_string_free(item, TRUE);
-    }
-    /* Write 0 to indicate end of file */
-    gint end = 0;
-    fwrite(&end, 4, 1, history_file);
-    fclose(history_file);
-  }
-}
-
-/* magic is what we are looking for, fmagic is what we read from the file.
- * Returns: history matched on match, -1 on erro, 0 if not found */
-int check_magic(gchar *fmagic)
-{
-  gint i, rtn;
-  gchar *magic=g_malloc0(2+HISTORY_MAGIC_SIZE);
-  if( NULL == magic) return -1;
-  for (i=0;NULL !=history_magics[i];++i){
-    memset(magic,0,HISTORY_MAGIC_SIZE);
-    memcpy(magic,history_magics[i],strlen(history_magics[i]));
-    if(!memcmp(magic,fmagic,HISTORY_MAGIC_SIZE)){
-      rtn= i+1;
-      goto done;
-    }
-
-  }
-  rtn=0;
-done:
-  g_free(magic);
-  return rtn;
-}
-
-/**  NOTES:
-  gint width, height, rowstride, n_channels,bits_per_sample ;
-  guchar *pixels;
-
-  n_channels = gdk_pixbuf_get_n_channels (pixbuf);
-
-  g_assert (gdk_pixbuf_get_colorspace (pixbuf) == GDK_COLORSPACE_RGB);
-  bits_per_sample=gdk_pixbuf_get_bits_per_sample (pixbuf);
-
-  width = gdk_pixbuf_get_width (pixbuf);
-  height = gdk_pixbuf_get_height (pixbuf);
-
-  rowstride = gdk_pixbuf_get_rowstride (pixbuf);
-  pixels = gdk_pixbuf_get_pixels (pixbuf);
-
-len of pixbuf=rowstride*(height-1)+width * ((n_channels * bits_per_sample + 7) / 8)
-
-last row of pixbuf=width * ((n_channels * bits_per_sample + 7) / 8)
-*/
-
-/* Saves history to ~/.local/share/parcellite/history */
-
 /* write total len, then write type, then write data. */
 void save_history()
 {
   /* Check that the directory is available */
   check_dirs();
   /* Build file path */
-  gchar* history_path = g_build_filename(g_get_user_data_dir(), HISTORY_FILE0, NULL);
+  gchar* history_path = g_build_filename(g_get_user_data_dir(), HISTORY_FILE, NULL);
   /* Open the file for writing */
   FILE* history_file = fopen(history_path, "wb");
   g_free(history_path);
