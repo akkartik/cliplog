@@ -112,21 +112,18 @@ int open_fifos(struct p_fifo *fifo)
   int flg;
   gchar *f;
 
-  if(PROG_MODE_CLIENT & fifo->whoami)
-    flg=O_WRONLY|O_NONBLOCK;
-  else {/**daemon  if you set O_RDONLY, you get 100%cpu usage from HUP*/
-    flg=O_RDWR|O_NONBLOCK;/*|O_EXCL; */
-  }
+  /* if you set O_RDONLY, you get 100%cpu usage from HUP */
+  flg=O_RDWR|O_NONBLOCK;/*|O_EXCL; */
 
   f=g_build_filename(g_get_user_data_dir(), FIFO_FILE_P, NULL);
-  if( (fifo->fifo_p=_open_fifo(f,flg))>2 && (PROG_MODE_DAEMON & fifo->whoami)){
+  if((fifo->fifo_p=_open_fifo(f,flg)) > 2) {
     if(fifo->dbg) g_printf("PRI fifo %d\n",fifo->fifo_p);
     fifo->g_ch_p=g_io_channel_unix_new (fifo->fifo_p);
     g_io_add_watch (fifo->g_ch_p,G_IO_IN|G_IO_HUP,fifo_read_cb,(gpointer)fifo);
   }
 
   f=g_build_filename(g_get_user_data_dir(), FIFO_FILE_C, NULL);
-  if( (fifo->fifo_c=_open_fifo(f,flg)) >2 && (PROG_MODE_DAEMON & fifo->whoami)){
+  if((fifo->fifo_c=_open_fifo(f,flg)) > 2) {
     fifo->g_ch_c=g_io_channel_unix_new (fifo->fifo_c);
     g_io_add_watch (fifo->g_ch_c,G_IO_IN|G_IO_HUP,fifo_read_cb,(gpointer)fifo);
   }
@@ -242,7 +239,6 @@ struct p_fifo *init_fifo()
   f->dbg=1;
   f->len=7999;
 
-  f->whoami=PROG_MODE_DAEMON;
   if(f->dbg) g_printf("running parcellite not found\n");
   if(create_fifo() < 0 ){
     g_printf("error creating fifo\n");

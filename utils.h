@@ -32,7 +32,6 @@ struct cmdline_opts *parse_options(int argc, char* argv[]);
 #define PROC_MODE_STRSTR 2
 
 struct p_fifo {
-	int whoami;					/**client or daemon  */
 	int fifo_p;					/**primary fifo  */
 	int fifo_c;					/**clipboard fifo  */
 	GIOChannel *g_ch_p; /**so we can add watches in the main loop  */
