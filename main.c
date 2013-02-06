@@ -13,13 +13,10 @@ GtkClipboard* clipboard;
 GMutex* state_lock = NULL;
 
 /**clipboard handling modes  */
-#define H_MODE_INIT  0  /**clear out clipboards  */
 #define H_MODE_NEW  1 /**new text, process it  */
 #define H_MODE_LIST 2 /**from list, just put it on the clip  */
 #define H_MODE_CHECK 3 /**see if there is new/lost contents.   */
 #define H_MODE_LAST  4 /**just return the last updated value.  */
-#define H_MODE_IGNORE 5 /**just put it on the clipboard, do not process
-                       and do not add to hist list  */
 
 /* Pass in the text via the struct. We assume len is correct, and BYTE based,
  * not character. Returns length of resulting string. */
@@ -117,7 +114,7 @@ gboolean is_clipboard_empty(GtkClipboard *clip)
   return !contents;
 }
 
-gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
+gchar* update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
 {
   /**current/last item in clipboard  */
   static gchar *ptext=NULL;
@@ -135,14 +132,6 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
     existing=&ctext;
   }
 
-  if( H_MODE_INIT == mode){
-    if(NULL != *existing)
-      g_free(*existing);
-    *existing=NULL;
-    if(NULL != intext)
-    gtk_clipboard_set_text(clip, intext, -1);
-    return NULL;
-  }
   /**check that our clipboards are valid and user wants to use them  */
   if(clip != clipboard)
       return NULL;
@@ -151,10 +140,6 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
     gdk_window_get_pointer(NULL, NULL, NULL, &button_state);
     if ( button_state & (GDK_BUTTON1_MASK|GDK_SHIFT_MASK) ) /**button down, done.  */
       goto done;
-  }
-  if( H_MODE_IGNORE == mode){ /**ignore processing and just put it on the clip.  */
-    gtk_clipboard_set_text(clip, intext, -1);
-    return intext;
   }
   /**check for lost contents and restore if lost */
   /* Only recover lost contents if there isn't any other type of content in the clipboard */
@@ -217,7 +202,6 @@ done:
   return *existing;
 }
 
-/* Checks the clipboards and fifos for changes. */
 void check_clipboards() {
   gchar *ptext, *ctext, *last;
   int n=0;
