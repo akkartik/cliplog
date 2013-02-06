@@ -20,8 +20,6 @@ struct cmdline_opts {
 gchar *p_strdup( const gchar *str );
 void check_dirs();
 
-gboolean is_hyperlink(gchar* link);
-
 struct cmdline_opts *parse_options(int argc, char* argv[]);
 
 #define PROG_MODE_CLIENT 2

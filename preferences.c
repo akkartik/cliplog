@@ -5,7 +5,6 @@
 
 #define DEF_SAVE_HISTORY      TRUE
 #define DEF_HISTORY_LIMIT     25
-#define DEF_HYPERLINKS_ONLY   FALSE
 #define DEF_CONFIRM_CLEAR     TRUE
 #define DEF_SINGLE_LINE       TRUE
 #define DEF_REVERSE_HISTORY   FALSE
@@ -79,10 +78,6 @@ struct pref_item myprefs[]={
   /**Miscellaneous  */
   {.adj=NULL,.cval=NULL,.sig="toggled",.sfunc=(GCallback)search_toggled,.sec=PREF_SEC_MISC,.name="type_search",.type=PREF_TYPE_TOGGLE,.desc="Search As You Type",.tip="If checked, does a search-as-you-type. Turns red if not found. Goes to top (Alt-E) line when no chars are entered for search"},
   {.adj=NULL,.cval=NULL,.sig="toggled",.sfunc=(GCallback)search_toggled,.sec=PREF_SEC_MISC,.name="case_search",.type=PREF_TYPE_TOGGLE,.desc="Case Sensitive Search",.tip="If checked, does case sensitive search"},
-  {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_MISC,.name="ignore_whiteonly",.type=PREF_TYPE_TOGGLE,.desc="Ignore Whitespace Only",.tip="If checked, will ignore any clipboard additions that contain only whitespace."},
-  {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_MISC,.name="trim_wspace_begend",.type=PREF_TYPE_TOGGLE,.desc="Trim Whitespace",.tip="If checked, will trim whitespace from beginning and end of entry."},
-  {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_MISC,.name="trim_newline",.type=PREF_TYPE_TOGGLE,.desc="Trim Newlines",.tip="If checked, will replace newlines with spaces."},
-  {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_MISC,.name="hyperlinks_only",.type=PREF_TYPE_TOGGLE,.desc="Capture hyperlinks only",.tip=NULL,.val=DEF_HYPERLINKS_ONLY},
   {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_MISC,.name="confirm_clear",.type=PREF_TYPE_TOGGLE,.desc="Confirm before clearing history",.tip=NULL,.val=DEF_CONFIRM_CLEAR},
 /**Display  add icon here...*/
   {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_DISP,.name="current_on_top",.type=PREF_TYPE_TOGGLE,.desc="Current entry on top",.tip="If checked, places current clipboard entry at top of list. If not checked, history does not get sorted.",.val=TRUE},

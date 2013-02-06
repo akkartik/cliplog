@@ -60,55 +60,8 @@ int p_strcmp (const char *str1, const char *str2)
 #endif
 }
 
-/* Process the text based on our preferences.
- * Returns processed text, or NULL if it is invalid. */
-gchar *process_new_item(GtkClipboard *clip,gchar *ntext)
-{
-  glong len;
-  gchar *rtn=NULL;
-  if(NULL == ntext)
-    return NULL;
-
-
-/**we now check our options...  */
-  if (get_pref_int32("hyperlinks_only")){
-     if(is_hyperlink(ntext))
-        goto process;
-  } else {
-    if(get_pref_int32("ignore_whiteonly")){
-      gchar *s;
-      for (s=ntext; NULL !=s && *s; ++s){
-        if(!isspace(*s)){
-          goto process;
-          break;
-        }
-      }
-    }else
-      goto process;
-  }
-  /**set the clipboard to the last entry - effectively deleting this entry */
-  goto done;
-
- process:  /**now process the text.  */
-  len=strlen(ntext);
-  len= validate_utf8_text(ntext, len);
-  if(len){
-    rtn=ntext;
-    gint i;
-    if(get_pref_int32("trim_newline")){
-      gchar *c;
-      for (c=ntext;*c;){
-        if(iscntrl(*c))
-          *c=' ';
-        c=g_utf8_next_char(c);
-      }
-    }
-
-    if( get_pref_int32("trim_wspace_begend") )
-      ntext=g_strstrip(ntext);
-  }
-done:
-  return rtn;
+gchar* process_new_item(gchar* ntext) {
+  return validate_utf8_text(ntext, strlen(ntext)) ? ntext : NULL;
 }
 
 gchar *_update_clipboard (GtkClipboard *clip, gchar *n, gchar **old, int set)
@@ -190,7 +143,7 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
     g_free(changed);                    /**no change, do nothing  */
     changed=NULL;
   } else {
-    if(NULL != (processed=process_new_item(clip,changed)) ){
+    if(NULL != (processed=process_new_item(changed)) ){
       if(0 == p_strcmp(processed,changed)) set=0;
       else set=1;
 
@@ -228,7 +181,7 @@ gchar *update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
     }
     goto done;
   }else if(H_MODE_NEW==mode){
-    if(NULL != (processed=process_new_item(clip,intext)) ){
+    if(NULL != (processed=process_new_item(intext)) ){
       if(0 == p_strcmp(processed,*existing))set=0;
       else set=1;
       last=_update_clipboard(clip,processed,existing,set);
