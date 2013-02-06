@@ -26,13 +26,8 @@ void check_dirs() {
 }
 
 gboolean fifo_read_cb (GIOChannel *src, GIOCondition cond, gpointer unused) {
-  int which;
-  if(src == fifos.g_ch_p)
-    which = PRIMARY;
-  else if(src == fifos.g_ch_c)
-    which = CLIPBOARD;
-  else{
-    g_printf("Unable to determine fifo!!\n");
+  if (src != fifos.g_ch_c) {
+    g_printf("Unable to determine fifo\n");
     return 0;
   }
   if(cond & G_IO_HUP){
@@ -51,7 +46,7 @@ gboolean fifo_read_cb (GIOChannel *src, GIOCondition cond, gpointer unused) {
   fifos.rlen=0;
     int s;
 
-  read_fifo(which);
+  read_fifo();
 
   return TRUE;
 }
@@ -68,22 +63,17 @@ gint _create_fifo(gchar *f) {
   return i;
 }
 
-int create_fifo(void)
-{
+int create_fifo(void) {
   gchar *f;
   int i=0;
   check_dirs();
   f=g_build_filename(g_get_user_data_dir(), "cliplog/clipboard", NULL);
   if(-1 ==  _create_fifo(f) )
     --i;
-  f=g_build_filename(g_get_user_data_dir(), "cliplog/primary", NULL);
-  if(-1 ==  _create_fifo(f) )
-    --i;
   return i;
 }
 
-int _open_fifo(char *path, int flg)
-{
+int _open_fifo(char *path, int flg) {
   int fd;
   mode_t mode=0660;
   fd=open(path,flg,mode);
@@ -101,43 +91,24 @@ int open_fifos() {
   /* if you set O_RDONLY, you get 100%cpu usage from HUP */
   flg=O_RDWR|O_NONBLOCK;/*|O_EXCL; */
 
-  f=g_build_filename(g_get_user_data_dir(), "cliplog/primary", NULL);
-  if ((fifos.primary_fifo=_open_fifo(f,flg)) > 2) {
-    if(fifos.dbg) g_printf("PRI fifo %d\n",fifos.primary_fifo);
-    fifos.g_ch_p=g_io_channel_unix_new (fifos.primary_fifo);
-    g_io_add_watch(fifos.g_ch_p,G_IO_IN|G_IO_HUP,fifo_read_cb, NULL);
-  }
-
   f=g_build_filename(g_get_user_data_dir(), "cliplog/clipboard", NULL);
   if ((fifos.clipboard_fifo=_open_fifo(f,flg)) > 2) {
     fifos.g_ch_c=g_io_channel_unix_new (fifos.clipboard_fifo);
     g_io_add_watch(fifos.g_ch_c,G_IO_IN|G_IO_HUP,fifo_read_cb, NULL);
   }
   if (fifos.dbg)
-    g_printf("CLI fifo %d PRI fifo %d\n",fifos.clipboard_fifo,fifos.primary_fifo);
-  if(fifos.clipboard_fifo <3 || fifos.primary_fifo <3)
+    g_printf("CLI fifo %d\n",fifos.clipboard_fifo);
+  if(fifos.clipboard_fifo < 3)
     return -1;
   return 0;
 }
 
 
-int read_fifo(int which) {
+int read_fifo() {
   int i,t, fd;
   i=t=0;
 
-  switch(which){
-    case PRIMARY:
-      fd=fifos.primary_fifo;
-      fifos.which=PRIMARY;
-      break;
-    case CLIPBOARD:
-      fd=fifos.clipboard_fifo;
-      fifos.which=CLIPBOARD;
-      break;
-    default:
-      g_printf("Unknown fifo %d!\n",which);
-      return -1;
-  }
+  fd=fifos.clipboard_fifo;
 
   if(fd <3 ||NULL == fifos.buf|| fifos.len <=0)
     return -1;
@@ -162,22 +133,11 @@ int read_fifo(int which) {
   return t;
 }
 
-int write_fifo(int which, char *buf, int len) {
+int write_fifo(char *buf, int len) {
   int i, l,fd;
   l=0;
-  switch(which){
-    case PRIMARY:
-      if(fifos.dbg) g_printf("Using pri fifo for write\n");
-      fd=fifos.primary_fifo;
-      break;
-    case CLIPBOARD:
-      if(fifos.dbg) g_printf("Using cli fifo for write\n");
-      fd=fifos.clipboard_fifo;
-      break;
-    default:
-      g_printf("Unknown fifo %d!\n",which);
-      return -1;
-  }
+  if(fifos.dbg) g_printf("Using cli fifo for write\n");
+  fd=fifos.clipboard_fifo;
   if(fd <3 || NULL ==buf)
     return -1;
   if(fifos.dbg) g_printf("writing '%s'\n",buf);

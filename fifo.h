@@ -1,8 +1,5 @@
 #include <glib.h>
 
-#define PRIMARY 1
-#define CLIPBOARD 2
-
 struct State {
 	int primary_fifo;
 	int clipboard_fifo;

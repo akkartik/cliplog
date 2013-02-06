@@ -7,7 +7,6 @@
 #include <string.h>
 #include <unistd.h>
 
-GtkClipboard* primary;
 GtkClipboard* clipboard;
 
 GMutex* state_lock = NULL;
@@ -126,21 +125,12 @@ gchar* update_clipboard(GtkClipboard *clip,gchar *intext,  gint mode)
   int set=1;
   if( H_MODE_LAST == mode)
     return last;
-  if(clip==primary){
-    existing=&ptext;
-  } else{
-    existing=&ctext;
-  }
+  existing=&ctext;
 
   /**check that our clipboards are valid and user wants to use them  */
   if(clip != clipboard)
       return NULL;
 
-  if(H_MODE_CHECK==mode &&clip == primary){/*fix auto-deselect of text in applications like DevHelp and LyX*/
-    gdk_window_get_pointer(NULL, NULL, NULL, &button_state);
-    if ( button_state & (GDK_BUTTON1_MASK|GDK_SHIFT_MASK) ) /**button down, done.  */
-      goto done;
-  }
   /**check for lost contents and restore if lost */
   /* Only recover lost contents if there isn't any other type of content in the clipboard */
   if(is_clipboard_empty(clip) && NULL != *existing ) {
@@ -205,30 +195,14 @@ done:
 void check_clipboards() {
   gchar *ptext, *ctext, *last;
   int n=0;
-  if(fifos.rlen >0){
-    switch(fifos.which){
-      case PRIMARY:
-        fifos.rlen=validate_utf8_text(fifos.buf, fifos.rlen);
-        if(fifos.dbg) g_printf("Setting PRI '%s'\n",fifos.buf);
-        update_clipboard(primary, fifos.buf, H_MODE_NEW);
-        fifos.rlen=0;
-        n=1;
-        break;
-      case CLIPBOARD:
-        fifos.rlen=validate_utf8_text(fifos.buf, fifos.rlen);
-        if(fifos.dbg) g_printf("Setting CLI '%s'\n",fifos.buf);
-        update_clipboard(clipboard, fifos.buf, H_MODE_NEW);
-        n=2;
-        fifos.rlen=0;
-        break;
-      default:
-        fifos.rlen=validate_utf8_text(fifos.buf, fifos.rlen);
-        g_printf("CLIP not set, discarding '%s'\n",fifos.buf);
-        fifos.rlen=0;
-        break;
-    }
+  if (fifos.rlen >0){
+    fifos.rlen=validate_utf8_text(fifos.buf, fifos.rlen);
+    if(fifos.dbg) g_printf("Setting CLI '%s'\n",fifos.buf);
+    update_clipboard(clipboard, fifos.buf, H_MODE_NEW);
+    n=2;
+    fifos.rlen=0;
   }
-  ptext=update_clipboard(primary, NULL, H_MODE_CHECK);
+
   ctext=update_clipboard(clipboard, NULL, H_MODE_CHECK);
 
   if(NULL==ptext && NULL ==ctext) return;
@@ -247,7 +221,6 @@ int main(int argc, char *argv[])
 
   init_fifos();
 
-  primary = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
   clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
   g_timeout_add(500/*ms*/, check_clipboards, NULL);
 
