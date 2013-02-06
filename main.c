@@ -20,10 +20,6 @@ We keep track of a delete list while the history menu is up. We add/remove items
 list until we get a selection done event, then we delete those items from the real history
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include "parcellite.h"
 
 
@@ -753,9 +749,6 @@ static void show_about_dialog(GtkMenuItem *menu_item, gpointer user_data)
                         gtk_widget_render_icon(about_dialog, GTK_STOCK_ABOUT, GTK_ICON_SIZE_MENU, NULL));
     
     gtk_about_dialog_set_name((GtkAboutDialog*)about_dialog, "Parcellite");
-    #ifdef HAVE_CONFIG_H
-    gtk_about_dialog_set_version((GtkAboutDialog*)about_dialog, VERSION);
-    #endif
     gtk_about_dialog_set_comments((GtkAboutDialog*)about_dialog,
                                 "Lightweight GTK+ clipboard manager.");
     
