@@ -90,7 +90,7 @@ void log_clipboard() {
   FILE* history_file = fopen(history_path, "a");
   if (!history_file) return;
   /* Write most recent element */
-  fprintf(history_file, "%s: %s\n", "AA: ",
+  fprintf(history_file, "%s: %s\n", "AA",
       ((struct history_item*)history_list->data)->text);
   fclose(history_file);
 }
@@ -357,61 +357,14 @@ void write_stdin(struct p_fifo *fifo, int which)
 
 int main(int argc, char *argv[])
 {
-  struct cmdline_opts *opts;
-  int mode;
-
   gtk_init(&argc, &argv);
 
-  /* Parse options */
-  opts=parse_options(argc, argv);
-  if(NULL == opts)
-    return 1;
-  if(proc_find(PARCELLITE_PROG_NAME,PROC_MODE_EXACT,NULL)<2)  /**1 for me, and 1 for a running instance  */
-    mode=PROG_MODE_DAEMON; /**first instance  */
-  else
-    mode=PROG_MODE_CLIENT; /**already running, just access fifos & exit.  */
+  fifo=init_fifo();
 
-  /**get options/cmd line not parsed.  */
-  if( NULL != opts->leftovers)g_print("%s\n",opts->leftovers);
-
-  /* Set up the fifo and the callback */
-  {
-    GtkClipboard* clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    fifo=init_fifo(FIFO_MODE_NONE|mode);
-      /* Copy from unrecognized options */
-    if(PROG_MODE_CLIENT & mode){
-      if(NULL != opts->leftovers){
-        write_fifo(fifo,FIFO_MODE_CLI,opts->leftovers,strlen(opts->leftovers));
-        g_free(opts->leftovers);
-      }
-         /* Check if stdin is piped */
-      write_stdin(fifo,FIFO_MODE_CLI);
-      usleep(1000);
-    }
-
-    gchar* clip_text = gtk_clipboard_wait_for_text(clip);
-    if (clip_text)
-      g_print("%s", clip_text);
-     g_free(clip_text);
-  }
-
-        /* Run as daemon option */
-  if (opts->daemon && (PROG_MODE_DAEMON & mode))  {
-    init_daemon_mode();
-  }
-  if(PROG_MODE_CLIENT & mode){
-    close_fifos(fifo);
-    return 0;
-  }
-
-  /* Init Parcellite */
-  parcellite_init(mode);
-  /* Run GTK+ loop */
+  parcellite_init();
   gtk_main();
 
-  /* Cleanup */
   g_list_free(history_list);
   close_fifos(fifo);
-  /* Exit */
   return 0;
 }

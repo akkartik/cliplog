@@ -32,98 +32,6 @@ void check_dirs()
   g_free(config_dir);
 }
 
-/* Parses the program arguments. Returns TRUE if program needs
- * to exit after parsing is complete
- */
-struct cmdline_opts *parse_options(int argc, char* argv[])
-{
-  struct cmdline_opts *opts=g_malloc0(sizeof(struct cmdline_opts));
-  if(NULL == opts){
-    g_printf("Unable to malloc cmdline_opts\n");
-    return NULL;
-  }
-  if (argc <= 1)
-    return opts;
-  GOptionEntry main_entries[] =
-  {
-    {
-      "daemon", 'd',
-      0,
-      G_OPTION_ARG_NONE,
-      &opts->daemon, "Run as daemon",
-      NULL
-    },
-    {
-      NULL
-    }
-  };
-
-  /* Option parsing */
-  GOptionContext* context = g_option_context_new(NULL);
-  /* Add entries and parse options */
-  g_option_context_add_main_entries(context, main_entries, NULL);
-  g_option_context_parse(context, &argc, &argv, NULL);
-  g_option_context_free(context);
-  opts->leftovers = g_strjoinv(" ", argv + 1);
-  /* Check which options were parseed */
-  return opts;
-}
-
-
-/* Return a PID given a name. Used to check a if a process is running.. if 2
- * or greater, process is running
- * Returns: number of instances of name found */
-int proc_find(const char* name, int mode, pid_t *pid)
-{
-  DIR* dir;
-  FILE* fp;
-  struct dirent* ent;
-  char* endptr;
-  char buf[PATH_MAX];
-  int instances=0;
-
-  if (!(dir = opendir("/proc"))) {
-    perror("can't open /proc");
-    return -1;
-  }
-
-  while((ent = readdir(dir)) != NULL) {
-    /* if endptr is not a null character, the directory is not
-     * entirely numeric, so ignore it */
-    long lpid = strtol(ent->d_name, &endptr, 10);
-    if (*endptr != '\0') {
-        continue;
-    }
-    /* try to open the cmdline file */
-    snprintf(buf, sizeof(buf), "/proc/%ld/cmdline", lpid);
-
-    if ((fp= fopen(buf, "r"))) {
-      if (fgets(buf, sizeof(buf), fp) != NULL) {
-        if(PROC_MODE_EXACT == mode){
-          gchar *b=g_path_get_basename(buf);
-          if (!g_strcmp0(b, name)) {
-            ++instances;
-            if(NULL !=pid)
-              *pid=lpid;
-          }
-        }else if( PROC_MODE_STRSTR == mode){
-          if(NULL !=g_strrstr(buf,name)){
-            ++instances;
-            if(NULL !=pid)
-              *pid=lpid;
-          }
-        }
-
-      }
-      fclose(fp);
-    }
-
-  }
-
-  closedir(dir);
-  return instances;
-}
-
 #define FIFO_FILE_C          "parcellite/fifo_c"
 #define FIFO_FILE_P          "parcellite/fifo_p"
 
@@ -309,17 +217,16 @@ int write_fifo(struct p_fifo *f, int which, char *buf, int len)
   return 0;
 }
 
-/** Figure out who we are, then open the fifo accordingly.
-return the fifo file descriptor, or -1 on error
-GIOChannel*         g_io_channel_unix_new               (int fd);
+/* Figure out who we are, then open the fifo accordingly.
 
-guint               g_io_add_watch                      (GIOChannel *channel,
-                                                         G_IO_IN    GIOFunc func,
-                                                         gpointer user_data);
+      GIOChannel* g_io_channel_unix_new(int fd);
 
-g_io_channel_shutdown(channel,TRUE,NULL);
-Returns:  allocated struct or NULL on fail */
-struct p_fifo *init_fifo(int mode)
+      guint g_io_add_watch(GIOChannel *channel,
+                           G_IO_IN GIOFunc func,
+                           gpointer user_data);
+
+      g_io_channel_shutdown(channel,TRUE,NULL); */
+struct p_fifo *init_fifo()
 {
   struct p_fifo *f=g_malloc0(sizeof(struct p_fifo));
   if(NULL == f){
@@ -334,29 +241,18 @@ struct p_fifo *init_fifo(int mode)
   /**set debug here for debug messages */
   f->dbg=1;
   f->len=7999;
-  /**we are daemon, and will launch  */
-  if(mode&PROG_MODE_DAEMON){
-    f->whoami=PROG_MODE_DAEMON;
-    if(f->dbg) g_printf("running parcellite not found\n");
-    if(create_fifo() < 0 ){
-      g_printf("error creating fifo\n");
-      goto err;
-    }
-    if(open_fifos(f) < 0 ){
-      g_printf("Error opening fifo. Exit\n");
-      goto err;
-    }
-    return f;
-      /**We are the client  */
-  } else{
-    f->whoami=PROG_MODE_CLIENT;
-    if(f->dbg) g_printf("parcellite found\n");
-    if(open_fifos(f) < 0 ){
-      g_printf("Error opening fifo. Exit\n");
-      goto err;
-    }
-    return f;
+
+  f->whoami=PROG_MODE_DAEMON;
+  if(f->dbg) g_printf("running parcellite not found\n");
+  if(create_fifo() < 0 ){
+    g_printf("error creating fifo\n");
+    goto err;
   }
+  if(open_fifos(f) < 0 ){
+    g_printf("Error opening fifo. Exit\n");
+    goto err;
+  }
+  return f;
 
 err:
   close_fifos(f);

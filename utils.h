@@ -48,7 +48,7 @@ int create_fifo(void);
 int open_fifos(struct p_fifo *fifo);
 int read_fifo(struct p_fifo *f, int which);
 int write_fifo(struct p_fifo *f, int which, char *buf, int len);
-struct p_fifo* init_fifo(int mode);
+struct p_fifo* init_fifo();
 void close_fifos(struct p_fifo *p);
 
 G_END_DECLS
