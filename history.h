@@ -34,7 +34,7 @@ glong validate_utf8_text(gchar *text, glong len);
 
 void read_history();
 
-void save_history();
+void log_clipboard();
 
 struct history_item *new_clip_item(gint type, guint32 len, void *data);
 gint is_duplicate(gchar* item, int mode,int *type);

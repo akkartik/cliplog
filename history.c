@@ -19,7 +19,7 @@ glong validate_utf8_text(gchar *text, glong len)
   return len;
 }
 
-void save_history() {
+void log_clipboard() {
   check_dirs();
   static gchar* history_path = NULL;
   if (!history_path)
@@ -126,9 +126,7 @@ void truncate_history()
       }
     }
 
-    /* Save changes */
-    if (get_pref_int32("save_history"))
-      save_history();
+    log_clipboard();
   }
 }
 
@@ -148,68 +146,4 @@ gpointer get_last_item()
   }
   else
     return NULL;
-}
-
-
-void clear_history( void )
-{
-
-  if( !get_pref_int32("persistent_history")){
-    g_list_free(history_list);
-    history_list = NULL;
-  } else{ /**save any persistent items  */
-    GList* element;
-    for (element = history_list; element != NULL; element = element->next) {
-      struct history_item *c;
-      c=(struct history_item *)element->data;
-      if(!(c->flags & CLIP_TYPE_PERSISTENT))
-        history_list=g_list_remove(history_list,c);
-    }
-  }
-
-  save_history();
-}
-
-int save_history_as_text(gchar *path)
-{
-  FILE* fp = fopen(path, "w");
-  /* Check that it opened and begin write */
-  if (fp)  {
-    gint i;
-    GList* element;
-    /* Write each element to  file */
-    for (i=0,element = history_list; element != NULL; element = element->next) {
-      struct history_item *c;
-      c=(struct history_item *)element->data;
-      if(c->flags & CLIP_TYPE_PERSISTENT)
-        fprintf(fp,"PHIST_%04d %s\n",i,c->text);
-      else
-        fprintf(fp,"NHIST_%04d %s\n",i,c->text);
-      ++i;
-    }
-    fclose(fp);
-  }
-
-  g_printf("histpath='%s'\n",path);
-}
-
-void history_save_as(GtkMenuItem *menu_item, gpointer user_data)
-{
-  GtkWidget *dialog;
-  dialog = gtk_file_chooser_dialog_new ("Save History File",
-              NULL,/**parent  */
-              GTK_FILE_CHOOSER_ACTION_SAVE,
-              GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-              GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-              NULL);
-  gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
-  gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), g_get_home_dir());
-  gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), "ParcelliteHistory.txt");
-  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
-      gchar *filename;
-      filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-      save_history_as_text (filename);
-      g_free (filename);
-    }
-  gtk_widget_destroy (dialog);
 }

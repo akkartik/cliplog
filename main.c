@@ -519,36 +519,6 @@ void  history_item_right_click (struct history_info *h, GdkEventKey *e, gint ind
   /*gtk_widget_grab_focus(menu);  */
 }
 
-/* Called when Clear is selected from history menu */
-static void clear_selected(GtkMenuItem *menu_item, gpointer user_data)
-{
-  /* Check for confirm clear option */
-  if (get_pref_int32("confirm_clear"))  {
-    GtkWidget* confirm_dialog = gtk_message_dialog_new(NULL,
-                                                       GTK_DIALOG_MODAL,
-                                                       GTK_MESSAGE_OTHER,
-                                                       GTK_BUTTONS_OK_CANCEL,
-                                                       "Clear the history?");
-
-    if (gtk_dialog_run((GtkDialog*)confirm_dialog) == GTK_RESPONSE_OK)    {
-      /* Clear history and free history-related variables */
-      clear_history();
-
-      update_clipboard(primary, "", H_MODE_INIT);
-      update_clipboard(clipboard, "", H_MODE_INIT);
-    }
-    gtk_widget_destroy(confirm_dialog);
-  }
-  else  {
-    /* Clear history and free history-related variables */
-    g_list_free(history_list);
-    history_list = NULL;
-    save_history();
-    update_clipboard(primary, "", H_MODE_INIT);
-    update_clipboard(clipboard, "", H_MODE_INIT);
-  }
-}
-
 /* Called when About is selected from right-click menu */
 static void show_about_dialog(GtkMenuItem *menu_item, gpointer user_data)
 {
@@ -767,12 +737,11 @@ static gboolean selection_done(GtkMenuShell *menushell, gpointer user_data)
       fflush(NULL);*/
       g_free(it);
     }
-    if (get_pref_int32("save_history"))
-      save_history();
+    log_clipboard();
     goto done;
   }
-  if(h->change_flag && get_pref_int32("save_history")){
-    save_history();
+  if(h->change_flag) {
+    log_clipboard();
     h->change_flag=0;
   }
 
@@ -875,8 +844,6 @@ static gboolean key_release_cb (GtkWidget *w,GdkEventKey *e, gpointer user)
     return FALSE;
   }
 
-  if(0 == get_pref_int32("type_search"))/**searching is turned off  */
-    return FALSE;
   /**ignore left-clicks  */
   if(GDK_BUTTON_RELEASE==e->type && 3 == ((GdkEventButton *)e)->button)
     return FALSE;
@@ -896,11 +863,6 @@ static gboolean key_release_cb (GtkWidget *w,GdkEventKey *e, gpointer user)
       TRACE(g_print("Alt-E\n"));
       gtk_grab_remove(w);
       edit_selected((GtkMenuItem *)h, (gpointer)h);
-    }
-
-    else if(e->keyval == 'c'){
-      TRACE(g_print("Alt-C\n"));
-      clear_selected(NULL, NULL);
     } else{
       TRACE(g_print("Ignoring Alt-%c (0x%02x) state 0x%x",e->keyval,e->keyval,e->state));
     }
@@ -1109,272 +1071,6 @@ void write_history_menu_items(GList *list, GtkWidget *menu)
       gtk_menu_shell_append((GtkMenuShell*)menu,element->data);
 }
 
-/* Called when status icon is left-clicked or action key hit. */
-static gboolean show_history_menu(gpointer data)
-{
-  /* Declare some variables */
-  GtkWidget *menu,       *menu_item,
-            *menu_image, *item_label;
-  static struct history_info h;
-  gint nok,pok;
-  h.histno=GPOINTER_TO_INT(data);/**persistent or normal history  */
-  h.change_flag=0;
-  h.element_text=NULL;
-  /**init our keystroke function  */
-  key_release_cb(NULL,NULL,NULL);
-  GList *element, *persistent=NULL;
-  GList *lhist=NULL;
-  int single_line=get_pref_int32("single_line");
-
-  /* Create the menu */
-  menu = gtk_menu_new();
-
-  h.menu=hmenu=menu;
-  h.clip_item=NULL;
-  h.delete_list=NULL;
-  h.persist_list=NULL;
-  h.wi.tmp1=0; /** used to tell edit what we are to edit  */
-  my_item_event(NULL,NULL,(gpointer)&h); /**init our function  */
-  item_selected(NULL,(gpointer)&h); /**ditto  */
-  gtk_menu_shell_set_take_focus((GtkMenuShell *)menu,TRUE); /**grab keyboard focus  */
-  g_signal_connect((GObject*)menu, "cancel", (GCallback)selection_done, &h);
-  g_signal_connect((GObject*)menu, "selection-done", (GCallback)selection_done, &h);
-  /**Trap key events  */
-  g_signal_connect((GObject*)menu, "event", (GCallback)key_release_cb, (gpointer)&h);
-  /**trap mnemonic events  */
-
-  /* -------------------- */
-  /* Items */
-  if ((history_list != NULL) && (history_list->data != NULL)) {
-    /* Declare some variables */
-
-    gint element_number = 0;
-    gchar* primary_temp = gtk_clipboard_wait_for_text(primary);
-    gchar* clipboard_temp = gtk_clipboard_wait_for_text(clipboard);
-    /* Reverse history if enabled */
-    if (get_pref_int32("reverse_history")) {
-      element_number = g_list_length(history_list) - 1;
-    }
-    /* Go through each element and adding each */
-    for (element = history_list; element != NULL; element = element->next) {
-      struct history_item *c=(struct history_item *)(element->data);
-      gchar* hist_text=c->text;
-      if(!(HIST_DISPLAY_PERSISTENT&h.histno) && (c->flags & CLIP_TYPE_PERSISTENT))
-        goto next_loop;
-      else if( !(HIST_DISPLAY_NORMAL&h.histno) && !(c->flags & CLIP_TYPE_PERSISTENT))
-        goto next_loop;
-      GString* string = g_string_new(hist_text);
-      glong len=g_utf8_strlen(string->str, string->len);
-      /* Ellipsize text */
-      if (len > get_pref_int32("item_length")) {
-        switch (get_pref_int32("ellipsize")) {
-          case PANGO_ELLIPSIZE_START:
-            string = g_string_erase(string, 0, g_utf8_offset_to_pointer(string->str, len - get_pref_int32("item_length")) - string->str);
-            string = g_string_prepend(string, "...");
-            break;
-          case PANGO_ELLIPSIZE_MIDDLE:
-            {
-            gchar* p1 = g_utf8_offset_to_pointer(string->str, get_pref_int32("item_length") / 2);
-            gchar* p2 = g_utf8_offset_to_pointer(string->str, len - get_pref_int32("item_length") / 2);
-            string = g_string_erase(string, p1 - string->str, p2 - p1);
-            string = g_string_insert(string, p1 - string->str, "...");
-            }
-            break;
-          case PANGO_ELLIPSIZE_END:
-            string = g_string_truncate(string, g_utf8_offset_to_pointer(string->str, get_pref_int32("item_length")) - string->str);
-            string = g_string_append(string, "...");
-            break;
-        }
-      }
-      /* Remove control characters */
-      gsize i = 0;
-      while (i < string->len)
-      {  /**fix 100% CPU utilization for odd data. - bug 2976890   */
-        gsize nline=0;
-        while(string->str[i+nline] == '\n' && nline+i<string->len)
-          nline++;
-        if(nline){
-          g_string_erase(string, i, nline);
-        }
-        else
-          i++;
-
-      }
-
-      /* Make new item with ellipsized text */
-      menu_item = gtk_menu_item_new_with_label(string->str);
-
-      g_signal_connect((GObject*)menu_item,      "event",
-                       (GCallback)my_item_event, GINT_TO_POINTER(element_number));
-      g_signal_connect((GObject*)menu_item,      "activate",
-                       (GCallback)item_selected, GINT_TO_POINTER(element_number));
-
-
-      /* Modify menu item label properties */
-      item_label = gtk_bin_get_child((GtkBin*)menu_item);
-      if(single_line){
-        /*gtk_label_set_line_wrap  */
-        gtk_label_set_single_line_mode((GtkLabel*)item_label, TRUE);
-      } else{
-        gtk_label_set_single_line_mode((GtkLabel*)item_label, FALSE);
-      }
-
-      /* Check if item is also clipboard text and make bold */
-      if ((clipboard_temp) && (p_strcmp(hist_text, clipboard_temp) == 0))
-      {
-        gchar* bold_text = g_markup_printf_escaped("<b>%s</b>", string->str);
-        gtk_label_set_markup((GtkLabel*)item_label, bold_text);
-        g_free(bold_text);
-        h.clip_item=menu_item;
-        h.element_text=hist_text;
-      }
-      else if ((primary_temp) && (p_strcmp(hist_text, primary_temp) == 0))
-      {
-        gchar* italic_text = g_markup_printf_escaped("<i>%s</i>", string->str);
-        gtk_label_set_markup((GtkLabel*)item_label, italic_text);
-        g_free(italic_text);
-        h.clip_item=menu_item;
-        h.element_text=hist_text;
-      }
-      if(get_pref_int32("persistent_history") && c->flags &CLIP_TYPE_PERSISTENT){
-        persistent = g_list_prepend(persistent, menu_item);
-      } else{
-        /* Append item */
-        lhist = g_list_prepend(lhist, menu_item);
-
-      }
-
-
-      /* Prepare for next item */
-      g_string_free(string, TRUE);
-next_loop:
-      if (get_pref_int32("reverse_history"))
-        element_number--;
-      else
-        element_number++;
-    } /**end of for loop for each history item  */
-    /* Cleanup */
-    g_free(primary_temp);
-    g_free(clipboard_temp);
-    /* Return history to normal if reversed */
-    /** if (get_pref_int32("reverse_history"))
-      history_list = g_list_reverse(history_list);*/
-  }
-  else
-  {
-    /* Nothing in history so adding empty */
-    menu_item = gtk_menu_item_new_with_label("Empty");
-    gtk_widget_set_sensitive(menu_item, FALSE);
-    gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
-  }
-  if (!get_pref_int32("reverse_history")) {
-    lhist = g_list_reverse(lhist);
-    persistent = g_list_reverse(persistent);
-  }
-/**now actually add them from the list  */
-  if(get_pref_int32("persistent_history")){
-    if(get_pref_int32("persistent_on_top")){
-      write_history_menu_items(persistent,menu);
-      gtk_menu_shell_append((GtkMenuShell*)menu, gtk_separator_menu_item_new());
-      write_history_menu_items(lhist,menu);
-    } else{
-      write_history_menu_items(lhist,menu);
-      gtk_menu_shell_append((GtkMenuShell*)menu, gtk_separator_menu_item_new());
-      write_history_menu_items(persistent,menu);
-    }
-  }else { /**normal old operation, forget about persistence.  */
-    write_history_menu_items(lhist,menu);
-  }
-
-  gtk_menu_shell_append((GtkMenuShell*)menu, gtk_separator_menu_item_new());
-
-  if(get_pref_int32("type_search")){
-    /* Edit clipboard */
-    h.title_item = gtk_image_menu_item_new_with_label("Use Alt-E to edit, Alt-C to clear");
-    menu_image = gtk_image_new_from_stock(GTK_STOCK_EDIT, GTK_ICON_SIZE_MENU);
-    gtk_image_menu_item_set_image((GtkImageMenuItem*)h.title_item, menu_image);
-    gtk_menu_shell_append((GtkMenuShell*)menu, h.title_item);
-  }else{
-    menu_item = gtk_image_menu_item_new_with_mnemonic("_Edit Clipboard");
-    menu_image = gtk_image_new_from_stock(GTK_STOCK_EDIT, GTK_ICON_SIZE_MENU);
-    gtk_image_menu_item_set_image((GtkImageMenuItem*)menu_item, menu_image);
-    g_signal_connect((GObject*)menu_item, "activate", (GCallback)edit_selected, (gpointer)&h);
-    gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
-    menu_item = gtk_image_menu_item_new_with_mnemonic("_Clear");
-    /* Clear */
-    menu_image = gtk_image_new_from_stock(GTK_STOCK_CLEAR, GTK_ICON_SIZE_MENU);
-    gtk_image_menu_item_set_image((GtkImageMenuItem*)menu_item, menu_image);
-    g_signal_connect((GObject*)menu_item, "activate", (GCallback)clear_selected, NULL);
-    gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
-  }
-  g_list_free(lhist);
-  g_list_free(persistent);
-  /* Popup the menu... */
-  gtk_widget_show_all(menu);
-  gtk_menu_popup((GtkMenu*)menu, NULL, NULL, get_pref_int32("history_pos")?postition_history:NULL, NULL, 1, gtk_get_current_event_time());
-  /**set last entry at first -fixes bug 2974614 */
-  gtk_menu_shell_select_first((GtkMenuShell*)menu, TRUE);
-  /* Return FALSE so the g_timeout_add() function is called only once */
-  return FALSE;
-}
-
-void _show_history_menu (GtkMenuItem *m, gpointer data)
-{
-  g_timeout_add(POPUP_DELAY, show_history_menu, GINT_TO_POINTER(figure_histories()));
-}
-
-GtkWidget *create_parcellite_menu(guint button, guint activate_time)
-{
-  /* Declare some variables */
-  GtkWidget *menu, *menu_item;
-
-  /* Create the menu */
-  menu = gtk_menu_new();
-  /* About */
-  menu_item = gtk_image_menu_item_new_from_stock(GTK_STOCK_ABOUT, NULL);
-  g_signal_connect((GObject*)menu_item, "activate", (GCallback)show_about_dialog, NULL);
-  gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
-
-  /* Save History */
-  menu_item = gtk_image_menu_item_new_from_stock(GTK_STOCK_SAVE_AS, NULL);
-  g_signal_connect((GObject*)menu_item, "activate", (GCallback)history_save_as, NULL);
-  gtk_widget_set_tooltip_text(menu_item, "Save History as a text file. Prepends xHIST_0000 to each entry. x is either P(persistent) or N (normal)");
-  gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
-  /* Preferences */
-  menu_item = gtk_image_menu_item_new_from_stock(GTK_STOCK_PREFERENCES, NULL);
-  g_signal_connect((GObject*)menu_item, "activate", (GCallback)preferences_selected, NULL);
-  gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
-  if(have_appindicator){
-      /* History */
-    GtkWidget *img=gtk_image_new_from_icon_name(PARCELLITE_ICON,GTK_ICON_SIZE_MENU);
-    menu_item = gtk_image_menu_item_new_with_mnemonic("_History");
-    gtk_image_menu_item_set_image((GtkImageMenuItem *)menu_item,img);
-    g_signal_connect((GObject*)menu_item, "activate", (GCallback)_show_history_menu, NULL);
-    gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
-  }
-
-  gtk_menu_shell_append((GtkMenuShell*)menu, gtk_separator_menu_item_new());
-  /* Quit */
-  menu_item = gtk_image_menu_item_new_from_stock(GTK_STOCK_QUIT, NULL);
-  g_signal_connect((GObject*)menu_item, "activate", (GCallback)quit_selected, NULL);
-  gtk_menu_shell_append((GtkMenuShell*)menu, menu_item);
-  /* Popup the menu... */
-  gtk_widget_show_all(menu);
-  gtk_menu_popup((GtkMenu*)menu, NULL, NULL, NULL, NULL, button, activate_time);
-  return menu;
-}
-
-/* Called when status icon is right-clicked */
-static void  show_parcellite_menu(GtkStatusIcon *status_icon, guint button, guint activate_time,  gpointer data)
-{
-  create_parcellite_menu(button, activate_time);
-}
-
-gboolean show_parcellite_menu_wrapper(gpointer data)
-{
-  create_parcellite_menu(0, gtk_get_current_event_time());
-}
-
 gint figure_histories(void)
 {
   gint i;
@@ -1386,52 +1082,6 @@ gint figure_histories(void)
   }else
     i=HIST_DISPLAY_NORMAL;
   return i;
-}
-
-/* Called when status icon is left-clicked */
-static void status_icon_clicked(GtkStatusIcon *status_icon, gpointer user_data)
-{
-  /* Check what type of click was recieved */
-  GdkModifierType state;
-  gtk_get_current_event_state(&state);
-  /* Control click */
-  if (state == GDK_MOD2_MASK+GDK_CONTROL_MASK || state == GDK_CONTROL_MASK)
-  {
-    g_printf("Got Ctrl-click\n");
-    if (actions_lock == FALSE)
-    {
-      g_timeout_add(POPUP_DELAY, show_actions_menu, NULL);
-    }
-  }
-  /* Normal click */
-  else
-  {
-    g_timeout_add(POPUP_DELAY, show_history_menu, GINT_TO_POINTER(figure_histories()));
-  }
-}
-
-/* Called when history global hotkey is pressed */
-void history_hotkey(char *keystring, gpointer user_data)
-{
-  g_timeout_add(POPUP_DELAY, show_history_menu, GINT_TO_POINTER(figure_histories()));
-}
-/* Called when persistent history global hotkey is pressed */
-void phistory_hotkey(char *keystring, gpointer user_data)
-{
-  if(get_pref_int32("persistent_history") && get_pref_int32("persistent_separate"))
-    g_timeout_add(POPUP_DELAY, show_history_menu, GINT_TO_POINTER(HIST_DISPLAY_PERSISTENT));
-}
-
-/* Called when actions global hotkey is pressed */
-void actions_hotkey(char *keystring, gpointer user_data)
-{
-  g_timeout_add(POPUP_DELAY, show_actions_menu, NULL);
-}
-
-/* Called when actions global hotkey is pressed */
-void menu_hotkey(char *keystring, gpointer user_data)
-{
-  show_parcellite_menu(status_icon, 0, 0, NULL);
 }
 
 /* Startup calls and initializations */
@@ -1451,13 +1101,6 @@ static void parcellite_init()
   read_preferences();
 
   g_timeout_add(CHECK_INTERVAL, check_clipboards_tic, NULL);
-
-  /* Bind global keys */
-  keybinder_init();
-  keybinder_bind(get_pref_string("phistory_key"), phistory_hotkey, NULL);
-  keybinder_bind(get_pref_string("history_key"), history_hotkey, NULL);
-  keybinder_bind(get_pref_string("actions_key"), actions_hotkey, NULL);
-  keybinder_bind(get_pref_string("menu_key"), menu_hotkey, NULL);
 }
 
 
@@ -1542,11 +1185,6 @@ int main(int argc, char *argv[])
   /* Run GTK+ loop */
   gtk_main();
 
-  /* Unbind keys */
-  keybinder_unbind(get_pref_string("phistory_key"), phistory_hotkey);
-  keybinder_unbind(get_pref_string("history_key"), history_hotkey);
-  keybinder_unbind(get_pref_string("actions_key"), actions_hotkey);
-  keybinder_unbind(get_pref_string("menu_key"), menu_hotkey);
   /* Cleanup */
   g_list_free(history_list);
   close_fifos(fifo);

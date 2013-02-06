@@ -76,9 +76,6 @@ struct pref_item myprefs[]={
   {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_HIST,.name="auto_mouse",.type=PREF_TYPE_TOGGLE|PREF_TYPE_SINGLE_LINE,.desc="Mouse",.tip="If checked, will use middle mouse to paste.",.val=1},
 
   /**Miscellaneous  */
-  {.adj=NULL,.cval=NULL,.sig="toggled",.sfunc=(GCallback)search_toggled,.sec=PREF_SEC_MISC,.name="type_search",.type=PREF_TYPE_TOGGLE,.desc="Search As You Type",.tip="If checked, does a search-as-you-type. Turns red if not found. Goes to top (Alt-E) line when no chars are entered for search"},
-  {.adj=NULL,.cval=NULL,.sig="toggled",.sfunc=(GCallback)search_toggled,.sec=PREF_SEC_MISC,.name="case_search",.type=PREF_TYPE_TOGGLE,.desc="Case Sensitive Search",.tip="If checked, does case sensitive search"},
-  {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_MISC,.name="confirm_clear",.type=PREF_TYPE_TOGGLE,.desc="Confirm before clearing history",.tip=NULL,.val=DEF_CONFIRM_CLEAR},
 /**Display  add icon here...*/
   {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_DISP,.name="current_on_top",.type=PREF_TYPE_TOGGLE,.desc="Current entry on top",.tip="If checked, places current clipboard entry at top of list. If not checked, history does not get sorted.",.val=TRUE},
   {.adj=NULL,.cval=NULL,.sig=NULL,.sec=PREF_SEC_DISP,.name="single_line",.type=PREF_TYPE_TOGGLE,.desc="Show in a single line",.tip=NULL,.val=DEF_SINGLE_LINE},
@@ -266,12 +263,6 @@ void check_sanity(void)
 static void apply_preferences()
 {
   int i;
-  /* Unbind the keys before binding new ones */
-  unbind_itemkey("phistory_key",phistory_hotkey);
-
-  unbind_itemkey("history_key", history_hotkey);
-  unbind_itemkey("actions_key", actions_hotkey);
-  unbind_itemkey("menu_key", menu_hotkey);
 
   for (i=0;NULL != myprefs[i].name; ++i){
     switch(myprefs[i].type&PREF_TYPE_MASK){
@@ -294,12 +285,6 @@ static void apply_preferences()
     }
   }
   check_sanity();
-  /* Bind keys and apply the new history limit */
-  bind_itemkey("phistory_key", phistory_hotkey);
-  bind_itemkey("history_key", history_hotkey);
-  bind_itemkey("actions_key", actions_hotkey);
-  bind_itemkey("menu_key", menu_hotkey);
-  truncate_history();
 }
 
 static void save_preferences()
