@@ -46,36 +46,6 @@ struct history_item *new_clip_item(gint type, guint32 len, void *data)
   return c;
 }
 
-/* checks to see if text is already in history. Also is a find text
- * Arguments: if mode is 1, delete it too.
- * Returns: -1 if not found, or nth element. */
-gint is_duplicate(gchar* item, int mode, gint *flags)
-{
-  GList* element;
-  gint i;
-  if(NULL ==item)
-    return -1;
-  /* Go through each element compare each */
-  for (i=0,element = history_list; element != NULL; element = element->next,++i) {
-    struct history_item *c;
-    c=(struct history_item *)element->data;
-    if(CLIP_TYPE_TEXT == c->type){
-      if (g_strcmp0((gchar*)c->text, item) == 0) {
-        if(mode){
-          if(NULL != flags && (CLIP_TYPE_PERSISTENT&c->flags)){
-            *flags=c->flags;
-          }
-          g_free(element->data);
-          history_list = g_list_delete_link(history_list, element);
-        }
-        return i;
-        break;
-      }
-    }
-  }
-  return -1;
-}
-
 void append_item(gchar* item)
 {
   gint flags=0,node=-1;
