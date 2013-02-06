@@ -24,7 +24,6 @@ static GtkStatusIcon *status_icon;
 static GMutex *clip_lock=NULL;
 GMutex *hist_lock=NULL;
 static gboolean actions_lock = FALSE;
-static int show_icon=0;
 static int have_appindicator=0; /**if set, we have a running indicator-appmenu  */
 static gchar *appindicator_process="indicator-appmenu"; /**process name  */
 /**defines for moving between clipboard histories  */
@@ -310,16 +309,8 @@ static void *execute_action(void *command)
 {
   /* Execute action */
   actions_lock = TRUE;
-  if (!have_appindicator && show_icon) {
-  gtk_status_icon_set_from_stock((GtkStatusIcon*)status_icon, GTK_STOCK_EXECUTE);
-  gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Executing action...");
-  }
   if(system((gchar*)command))
     g_print("sytem command '%s' failed\n",(gchar *)command);
-  if (!have_appindicator &&show_icon) {
-  gtk_status_icon_set_from_icon_name((GtkStatusIcon*)status_icon, PARCELLITE_ICON);
-  gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Clipboard Manager");
-  }
   actions_lock = FALSE;
   g_free((gchar*)command);
   /* Exit this thread */
@@ -330,10 +321,6 @@ static void *execute_action(void *command)
 static void action_exit(GPid pid, gint status, gpointer data)
 {
   g_spawn_close_pid(pid);
-  if (!have_appindicator && show_icon) {
-    gtk_status_icon_set_from_icon_name((GtkStatusIcon*)status_icon, PARCELLITE_ICON);
-    gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Clipboard Manager");
-  }
   actions_lock = FALSE;
 }
 
@@ -342,10 +329,6 @@ static void action_selected(GtkButton *button, gpointer user_data)
 {
   /* Change icon and enable lock */
   actions_lock = TRUE;
-  if (!have_appindicator && show_icon) {
-    gtk_status_icon_set_from_stock((GtkStatusIcon*)status_icon, GTK_STOCK_EXECUTE);
-    gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Executing action...");
-  }
   /* Insert clipboard into command (user_data), and prepare it for execution */
   gchar* clipboard_text = gtk_clipboard_wait_for_text(clipboard);
   gchar* command=g_strdup_printf((gchar *)user_data,clipboard_text);
@@ -1518,7 +1501,6 @@ static void parcellite_init()
   g_mutex_unlock(clip_lock);
   /* Read preferences */
   read_preferences();
-  show_icon=!get_pref_int32("no_icon");
   /* Read history */
   if (get_pref_int32("save_history")){
     read_history();
@@ -1540,18 +1522,6 @@ static void parcellite_init()
   keybinder_bind(get_pref_string("history_key"), history_hotkey, NULL);
   keybinder_bind(get_pref_string("actions_key"), actions_hotkey, NULL);
   keybinder_bind(get_pref_string("menu_key"), menu_hotkey, NULL);
-
-  /* Create status icon */
-  if (show_icon)
-  {
-    if(!have_appindicator){
-      status_icon = gtk_status_icon_new_from_icon_name(PARCELLITE_ICON);
-      gtk_status_icon_set_tooltip((GtkStatusIcon*)status_icon, "Clipboard Manager");
-      g_signal_connect((GObject*)status_icon, "activate", (GCallback)status_icon_clicked, NULL);
-      g_signal_connect((GObject*)status_icon, "popup-menu", (GCallback)show_parcellite_menu, NULL);
-    }
-
-  }
 }
 
 
@@ -1588,7 +1558,6 @@ int main(int argc, char *argv[])
   struct cmdline_opts *opts;
   int mode;
 
-  /* Initiate GTK+ */
   gtk_init(&argc, &argv);
 
   /* Parse options */

@@ -107,13 +107,6 @@ struct cmdline_opts *parse_options(int argc, char* argv[])
       NULL
     },
     {
-      "no-icon", 'n',
-      0,
-      G_OPTION_ARG_NONE,
-      &opts->icon, "Do not use status icon (Ctrl-Alt-P for menu)",
-      NULL
-    },
-    {
       "clipboard", 'c',
       0,
       G_OPTION_ARG_NONE,
@@ -150,12 +143,6 @@ struct cmdline_opts *parse_options(int argc, char* argv[])
   g_option_context_free(context);
   opts->leftovers = g_strjoinv(" ", argv + 1);
   /* Check which options were parseed */
-
-  /* Do not display icon option */
-  if (opts->icon)  {
-    set_pref_int32("no_icon",TRUE);
-  } else
-    set_pref_int32("no_icon",FALSE);
   return opts;
 }
 

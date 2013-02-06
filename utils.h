@@ -9,7 +9,6 @@ G_BEGIN_DECLS
 #define DATA_DIR    PARCELLITE_PROG_NAME
 
 struct cmdline_opts {
-	gboolean icon;
 	gboolean daemon;
 	gboolean clipboard;
 	gboolean primary;
