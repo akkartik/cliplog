@@ -187,7 +187,7 @@ done:
   return *existing;
 }
 
-void check_clipboards() {
+gboolean check_clipboards(gpointer dummy) {
   gchar *ptext, *ctext, *last;
   int n = 0;
 
@@ -201,6 +201,7 @@ void check_clipboards() {
     update_clipboard(clipboard, last, H_MODE_LIST);
     g_free(last);
   }
+  return TRUE;
 }
 
 int main(int argc, char *argv[])

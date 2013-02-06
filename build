@@ -1,7 +1,6 @@
-rm *.o cliplog
+rm cliplog
 set -e
 HEADERS=`pkg-config --cflags gtk+-2.0`
 LIBS=`pkg-config --libs gtk+-2.0`
 set -v
-gcc -g -O2 $HEADERS -c -o main.o main.c
-gcc -g -O2 main.o -lX11 $LIBS  -o cliplog
+gcc -g -O2 $HEADERS cliplog.c -lX11 $LIBS -o cliplog
