@@ -24,14 +24,14 @@ GList* history_list=NULL;
 static gint dbg=0;
 /**todo:
 handle parcellite history magic:
-if it does not exist, then we assume original format, and convert. 
+if it does not exist, then we assume original format, and convert.
 	Need to provide a menu item that allows user to convert back to old?
 	or just provide manual instructions to convert back (i.e. dd skip)?
-	
+
   */
 #define HISTORY_MAGIC_SIZE 32
 #define HISTORY_VERSION     1 /**index (-1) into array below  */
-static gchar* history_magics[]={  
+static gchar* history_magics[]={
 																"1.0ParcelliteHistoryFile",
 																NULL,
 };
@@ -66,7 +66,7 @@ void read_history_old ()
 {
   /* Build file path */
   gchar* history_path = g_build_filename(g_get_user_data_dir(), HISTORY_FILE0,   NULL);
-  
+
   /* Open the file for reading */
   FILE* history_file = fopen(history_path, "rb");
   g_free(history_path);
@@ -74,7 +74,7 @@ void read_history_old ()
   if (history_file)   {
     /* Read the size of the first item */
     gint size=1;
-    
+
     /* Continue reading until size is 0 */
     while (size)   {
 			struct history_item *c;
@@ -83,7 +83,7 @@ void read_history_old ()
 				break;
 			} else if( 0 == size )
 				break;
-      /* Malloc according to the size of the item */  
+      /* Malloc according to the size of the item */
 			c = (struct history_item *)g_malloc0(size+ 2+sizeof(struct history_item));
       c->type=CLIP_TYPE_TEXT;
 			c->len=size;
@@ -137,7 +137,7 @@ void save_history_old()
 /** .
 \n\b Arguments:
 magic is what we are looking for, fmagic iw what we read from the file.
-\n\b Returns: history matched on match, -1 on erro, 0 if not found 
+\n\b Returns: history matched on match, -1 on erro, 0 if not found
 ****************************************************************************/
 int check_magic(gchar *fmagic)
 {
@@ -146,12 +146,12 @@ int check_magic(gchar *fmagic)
 	if( NULL == magic) return -1;
 	for (i=0;NULL !=history_magics[i];++i){
 		memset(magic,0,HISTORY_MAGIC_SIZE);
-		memcpy(magic,history_magics[i],strlen(history_magics[i]));	
+		memcpy(magic,history_magics[i],strlen(history_magics[i]));
 		if(!memcmp(magic,fmagic,HISTORY_MAGIC_SIZE)){
-			rtn= i+1;	
+			rtn= i+1;
 			goto done;
 		}
-			
+
 	}
 	rtn=0;
 done:
@@ -168,7 +168,7 @@ Current scheme is to have the total zize of element followed by the type, then t
 void read_history ()
 {
   /* Build file path */
-  gchar* history_path = g_build_filename(g_get_user_data_dir(),HISTORY_FILE0,NULL); 
+  gchar* history_path = g_build_filename(g_get_user_data_dir(),HISTORY_FILE0,NULL);
 	gchar *magic=g_malloc0(2+HISTORY_MAGIC_SIZE);
   /*g_printf("History file '%s'",history_path); */
   /* Open the file for reading */
@@ -201,7 +201,7 @@ void read_history ()
       /* Malloc according to the size of the item */
       c = (struct history_item *)g_malloc0(size+ 1);
 			end=size-(sizeof(struct history_item)+4);
-      
+
       if (fread(c, sizeof(struct history_item), 1, history_file) !=1)
       	g_printf("history_read: Invalid type!");
 			if(c->len != end)
@@ -213,11 +213,11 @@ void read_history ()
 			}	else {
 				c->text[end] = 0;
 				c->len=validate_utf8_text(c->text,c->len);
-				if(dbg) g_printf("len %d type %d '%s'\n",c->len,c->type,c->text); 
+				if(dbg) g_printf("len %d type %d '%s'\n",c->len,c->type,c->text);
 	      /* Prepend item and read next size */
-	      history_list = g_list_prepend(history_list, c);	
+	      history_list = g_list_prepend(history_list, c);
 			}
-      
+
     }
 done:
 		g_free(magic);
@@ -258,7 +258,7 @@ void save_history()
   /* Check that the directory is available */
   check_dirs();
   /* Build file path */
-  gchar* history_path = g_build_filename(g_get_user_data_dir(), HISTORY_FILE0, NULL); 
+  gchar* history_path = g_build_filename(g_get_user_data_dir(), HISTORY_FILE0, NULL);
   /* Open the file for writing */
   FILE* history_file = fopen(history_path, "wb");
   g_free(history_path);
@@ -267,7 +267,7 @@ void save_history()
     GList* element;
 		gchar *magic=g_malloc0(2+HISTORY_MAGIC_SIZE);
 	  if( NULL == magic) return;
-		memcpy(magic,history_magics[HISTORY_VERSION-1],strlen(history_magics[HISTORY_VERSION-1]));	
+		memcpy(magic,history_magics[HISTORY_VERSION-1],strlen(history_magics[HISTORY_VERSION-1]));
 		fwrite(magic,HISTORY_MAGIC_SIZE,1,history_file);
     /* Write each element to a binary file */
     for (element = history_list; element != NULL; element = element->next) {
@@ -303,7 +303,7 @@ struct history_item *new_clip_item(gint type, guint32 len, void *data)
 		printf("Hit NULL for malloc of history_item!\n");
 		return NULL;
 	}
-		
+
 	c->type=type;
 	memcpy(c->text,data,len);
 	c->len=len;
@@ -352,17 +352,17 @@ void append_item(gchar* item, int checkdup)
 	if(NULL == item)
 		return;
 	g_mutex_lock(hist_lock);
-/**delete if HIST_DEL flag is set.  */	
+/**delete if HIST_DEL flag is set.  */
 	if( checkdup & HIST_CHECKDUP){
 		node=is_duplicate(item, checkdup & HIST_DEL, &flags);
 		/*g_printf("isd done "); */
 		if(node > -1){ /**found it  */
 			/*g_printf(" found\n"); */
 			if(!(checkdup & HIST_DEL))
-				return;	
+				return;
 		}
 	}
-	
+
 	struct history_item *c;
 	if(NULL == (c=new_clip_item(CLIP_TYPE_TEXT,strlen(item),item)) )
 		return;
@@ -370,7 +370,7 @@ void append_item(gchar* item, int checkdup)
 		c->flags=flags;
 		/*g_printf("Restoring 0x%02X '%s'\n",c->flags,c->text);  */
 	}
-		
+
 	/*g_printf("Append '%s'\n",item); */
    /* Prepend new item */
   history_list = g_list_prepend(history_list, c);
@@ -405,7 +405,7 @@ void delete_duplicate(gchar* item)
 
 /***************************************************************************/
 /**  Truncates history to history_limit items, while preserving persistent
-    data, if specified by the user. FIXME: This may not shorten the history 
+    data, if specified by the user. FIXME: This may not shorten the history
 \n\b Arguments:
 \n\b Returns:
 ****************************************************************************/
@@ -416,7 +416,7 @@ void truncate_history()
 		guint ll=g_list_length(history_list);
 		guint lim=get_pref_int32("history_limit");
 		if(ll > lim){ /* Shorten history if necessary */
-			GList* last = g_list_last(history_list);	
+			GList* last = g_list_last(history_list);
 			while (last->prev && ll>lim)   {
 	      struct history_item *c=(struct history_item *)last->data;
 				last=last->prev;
@@ -424,9 +424,9 @@ void truncate_history()
 					history_list=g_list_remove(history_list,c);
 					--ll;
 				}
-	    }	
+	    }
 		}
-		
+
     /* Save changes */
     if (get_pref_int32("save_history"))
       save_history();
@@ -459,7 +459,7 @@ gpointer get_last_item()
 ****************************************************************************/
 void clear_history( void )
 {
-	
+
 	if( !get_pref_int32("persistent_history")){
 		g_list_free(history_list);
   	history_list = NULL;
@@ -470,9 +470,9 @@ void clear_history( void )
 			c=(struct history_item *)element->data;
 			if(!(c->flags & CLIP_TYPE_PERSISTENT))
 				history_list=g_list_remove(history_list,c);
-		}		
+		}
 	}
-	
+
   save_history();
 }
 /***************************************************************************/
@@ -499,7 +499,7 @@ int save_history_as_text(gchar *path)
     }
     fclose(fp);
   }
-	
+
 	g_printf("histpath='%s'\n",path);
 }
 /***************************************************************************/
@@ -522,7 +522,7 @@ void history_save_as(GtkMenuItem *menu_item, gpointer user_data)
 	    gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), "ParcelliteHistory.txt");
 /**    }
 	else
-	  gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (dialog), filename_for_existing_document);*/	
+	  gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (dialog), filename_for_existing_document);*/
 	if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
 	    gchar *filename;
 	    filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));

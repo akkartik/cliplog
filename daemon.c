@@ -57,7 +57,7 @@ static void daemon_check()
       primary_text = p_strdup(primary_temp);
     }
   }
-  
+
   /* Check if clipboard contents were lost */
   if ((clipboard_temp == NULL) && (clipboard_text != NULL))
   {
@@ -104,7 +104,7 @@ void init_daemon_mode()
                                   (GSourceFunc)daemon_check,
                                   NULL,
                                   (GDestroyNotify)reset_daemon);
-  
+
   /* Start daemon loop */
   gtk_main();
 }

@@ -35,16 +35,16 @@ PangoAttrInt *get_underline_attr(GtkLabel *label)
 {
 	PangoAttrList *attrs=gtk_label_get_attributes (label);
 	PangoAttribute *attr;
-	
+
   if (NULL == attrs){/**no existing list. Add one  */
-		/*attrs = pango_attr_list_new (); 
+		/*attrs = pango_attr_list_new ();
 		attr=NULL;*/
 		return(NULL);
 	}else{ /**grab attribte, if there is one.  */
 		PangoAttrIterator* iter;
 		iter=pango_attr_list_get_iterator(attrs);
 		attr=pango_attr_iterator_get (iter,PANGO_ATTR_UNDERLINE);
-		pango_attr_iterator_destroy(iter);	
+		pango_attr_iterator_destroy(iter);
 	}
 	return (PangoAttrInt *)attr;
 }
@@ -71,11 +71,11 @@ void set_underline(GtkLabel *label, gboolean mode)
 {
 	PangoAttrInt *strike;
 	PangoAttrList *attrs;
-	
+
 	strike=get_underline_attr(label);
 	if(NULL ==(attrs=gtk_label_get_attributes (label)) )
 		attrs = pango_attr_list_new ();
-	
+
 	/** printf("strike=%p attrs=%p\n",strike,attrs);	fflush(NULL);*/
 	if(NULL ==strike || strike->value != mode){
 		PangoAttribute *attr=pango_attr_underline_new(mode);
@@ -92,16 +92,16 @@ PangoAttrInt *get_strikethrough_attr(GtkLabel *label)
 {
 	PangoAttrList *attrs=gtk_label_get_attributes (label);
 	PangoAttribute *attr;
-	
+
   if (NULL == attrs){/**no existing list. Add one  */
-		/*attrs = pango_attr_list_new (); 
+		/*attrs = pango_attr_list_new ();
 		attr=NULL;*/
 		return(NULL);
 	}else{ /**grab attribte, if there is one.  */
 		PangoAttrIterator* iter;
 		iter=pango_attr_list_get_iterator(attrs);
 		attr=pango_attr_iterator_get (iter,PANGO_ATTR_STRIKETHROUGH);
-		pango_attr_iterator_destroy(iter);	
+		pango_attr_iterator_destroy(iter);
 	}
 	if(0 && NULL == attr){ /**No existing strikethrough. Add the attribute.  */
 		attr=pango_attr_strikethrough_new(FALSE);
@@ -134,11 +134,11 @@ void set_strikethrough(GtkLabel *label, gboolean mode)
 {
 	PangoAttrInt *strike;
 	PangoAttrList *attrs;
-	
+
 	strike=get_strikethrough_attr(label);
 	if(NULL ==(attrs=gtk_label_get_attributes (label)) )
 		attrs = pango_attr_list_new ();
-	
+
 	/** printf("strike=%p attrs=%p\n",strike,attrs);	fflush(NULL);*/
 	if(NULL ==strike || strike->value != mode){
 		PangoAttribute *attr=pango_attr_strikethrough_new(mode);
@@ -194,17 +194,17 @@ void add_h_item(struct history_info *h, GtkWidget *w, GList* element, gint which
 					h->persist_list=g_list_prepend(op,(gpointer)i);
 					break;
 			}
-			
+
 			/** printf("Added w %p e %p %p\n",w,element,h->delete_list);	fflush(NULL);*/
-		}	
+		}
 	}
 }
 
 /***************************************************************************/
 /** Delete an item from the history delete list.
 h->delete_list is a GList. The data points to a struct s_item_info, which
-contains a widget and an element - these latter two are part of the history 
-menu, so we just need to de-allocate the delete_list structure, and delete it 
+contains a widget and an element - these latter two are part of the history
+menu, so we just need to de-allocate the delete_list structure, and delete it
 from the list.
 \n\b Arguments:
 \n\b Returns:
@@ -236,10 +236,10 @@ void rm_h_item(struct history_info *h, GtkWidget *w, GList* element, gint which)
 		}
 		/** printf("Removed %p\n",i);	fflush(NULL);*/
 	}
-		
+
 }
 /***************************************************************************/
-/** Handle marking for history window. Also manages adding/removing from 
+/** Handle marking for history window. Also manages adding/removing from
 the delete list, which gets called when the history window closes.
 \n\b Arguments:
 \n\b Returns:
@@ -275,6 +275,6 @@ void handle_marking(struct history_info *h, GtkWidget *w, gint index, gint which
 			add_h_item(h,w,element,OPERATE_PERSIST);
 		}
 	}
-	
+
 }
 

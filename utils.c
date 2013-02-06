@@ -20,13 +20,13 @@
 #include "parcellite.h"
 /**for our fifo interface  */
 #include <sys/types.h>
-#include <dirent.h> 
+#include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
 
 
-/** Wrapper to replace g_strdup to limit size of text copied from clipboard. 
+/** Wrapper to replace g_strdup to limit size of text copied from clipboard.
 g_strndup will dup to the size of the limit, which will waste resources, so
 try to allocate using other methods.
 */
@@ -39,7 +39,7 @@ gchar *p_strdup( const gchar *str )
     return NULL;
   if(0==get_pref_int32("data_size"))
     return g_strdup(str);
-  x=get_pref_int32("data_size")*1000000; 
+  x=get_pref_int32("data_size")*1000000;
   /**use the following to test truncation  */
   /*x=get_pref_int32("data_size")*10; */
   if(TRUE ==g_utf8_validate (str,-1,NULL)){
@@ -50,17 +50,17 @@ gchar *p_strdup( const gchar *str )
     l=strlen(str);
     u8=0;
   }
-    
-  
+
+
   if(l>x){
     l=x;
   }
-  
+
   if(NULL !=(n=g_malloc(l+8))){
     n[l+7]=0;
     g_strlcpy(n,str,l+1);
   }
-    
+
   return n;
 }
 /* Creates program related directories if needed */
@@ -95,7 +95,7 @@ gboolean is_hyperlink(gchar* text)
                               "(([A-Za-z0-9$_.+!*,;/?:@&~=-])|%[A-Fa-f0-9]{2}){1,333}" \
                               "(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*,;/?:@&~=%-]{0,1000}))?)",
                               G_REGEX_CASELESS, 0, NULL);
-  
+
   gboolean result = g_regex_match(regex, text, 0, NULL);
   g_regex_unref(regex);
   return result;
@@ -113,9 +113,9 @@ struct cmdline_opts *parse_options(int argc, char* argv[])
 		g_printf("Unable to malloc cmdline_opts\n");
 		return NULL;
 	}
-  if (argc <= 1) 
-		return opts;	
-  GOptionEntry main_entries[] = 
+  if (argc <= 1)
+		return opts;
+  GOptionEntry main_entries[] =
   {
     {
       "daemon", 'd',
@@ -149,7 +149,7 @@ struct cmdline_opts *parse_options(int argc, char* argv[])
       NULL
     }
   };
-  
+
   /* Option parsing */
   GOptionContext* context = g_option_context_new(NULL);
   /* Set summary */
@@ -168,7 +168,7 @@ struct cmdline_opts *parse_options(int argc, char* argv[])
   g_option_context_free(context);
 	opts->leftovers = g_strjoinv(" ", argv + 1);
   /* Check which options were parseed */
-  
+
   /* Do not display icon option */
   if (opts->icon)  {
 		set_pref_int32("no_icon",TRUE);
@@ -184,7 +184,7 @@ if 2 or greater, process is running
 \n\b Arguments:
 \n\b Returns:	number of instances of name found
 ****************************************************************************/
-int proc_find(const char* name, int mode, pid_t *pid) 
+int proc_find(const char* name, int mode, pid_t *pid)
 {
 	DIR* dir;
 	FILE* fp;
@@ -225,7 +225,7 @@ int proc_find(const char* name, int mode, pid_t *pid)
 						/*g_printf("Looking for '%s', found '%s'\n",name,buf); */
 					}
 				}
-				
+
       }
       fclose(fp);
     }
@@ -264,12 +264,12 @@ gboolean fifo_read_cb (GIOChannel *src,  GIOCondition cond, gpointer data)
 	if(cond & G_IO_IN){
 	  if(f->dbg) g_printf("norm ");
 	}
-	
+
   if(f->dbg) g_printf("0x%X Waiting on chars\n",cond);
 	f->rlen=0;
 /** (	while (1) {*/
 		int s;
-		
+
 		s=read_fifo(f,which);
 /**  		usleep(100);
 		if(-1 == s){
@@ -277,12 +277,12 @@ gboolean fifo_read_cb (GIOChannel *src,  GIOCondition cond, gpointer data)
 			return 0;
 		} else if(0 == s)
 			break;
-	}    
+	}
 	if(f->rlen>0){
 		g_printf("Setting fifo which\n");
 		f->which=FIFO_MODE_PRI==which?ID_PRIMARY:ID_CLIPBOARD;
 	}    */
-		
+
 	return TRUE;
 }
 
@@ -348,20 +348,20 @@ int open_fifos(struct p_fifo *fifo)
 {
 	int flg;
 	gchar *f;
-	
+
 	if(PROG_MODE_CLIENT & fifo->whoami)
 		flg=O_WRONLY|O_NONBLOCK;
 	else {/**daemon  if you set O_RDONLY, you get 100%cpu usage from HUP*/
 		flg=O_RDWR|O_NONBLOCK;/*|O_EXCL; */
-	}	
-	
+	}
+
 	f=g_build_filename(g_get_user_data_dir(), FIFO_FILE_P, NULL);
 	if( (fifo->fifo_p=_open_fifo(f,flg))>2 && (PROG_MODE_DAEMON & fifo->whoami)){
 		if(fifo->dbg) g_printf("PRI fifo %d\n",fifo->fifo_p);
 		fifo->g_ch_p=g_io_channel_unix_new (fifo->fifo_p);
 		g_io_add_watch (fifo->g_ch_p,G_IO_IN|G_IO_HUP,fifo_read_cb,(gpointer)fifo);
 	}
-		
+
 	f=g_build_filename(g_get_user_data_dir(), FIFO_FILE_C, NULL);
 	if( (fifo->fifo_c=_open_fifo(f,flg)) >2 && (PROG_MODE_DAEMON & fifo->whoami)){
 		fifo->g_ch_c=g_io_channel_unix_new (fifo->fifo_c);
@@ -383,7 +383,7 @@ int read_fifo(struct p_fifo *f, int which)
 {
 	int i,t, fd;
 	i=t=0;
-	
+
 	switch(which){
 		case FIFO_MODE_PRI:
 			fd=f->fifo_p;
@@ -403,7 +403,7 @@ int read_fifo(struct p_fifo *f, int which)
 		i=read(fd,f->buf,f->len-t);
 		if(i>0)
 			t+=i;
-		else 
+		else
 			break;
 	}
 	if( -1 == i){
@@ -443,7 +443,7 @@ int write_fifo(struct p_fifo *f, int which, char *buf, int len)
 	if(NULL ==f || fd <3 || NULL ==buf)
 		return -1;
 	if(f->dbg) g_printf("writing '%s'\n",buf);
-	while(len){																							
+	while(len){
 		i=write(fd,buf,len);
 		if(i>0)
 			len-=i;
@@ -452,7 +452,7 @@ int write_fifo(struct p_fifo *f, int which, char *buf, int len)
 			g_printf("Maxloop hit\n");
 			break;
 		}
-			
+
 	}
 	if( -1 == i){
 		if( EAGAIN != errno){
@@ -474,7 +474,7 @@ GIOChannel*         g_io_channel_unix_new               (int fd);
 guint               g_io_add_watch                      (GIOChannel *channel,
                                                          G_IO_IN    GIOFunc func,
                                                          gpointer user_data);
-                                                         
+
 g_io_channel_shutdown(channel,TRUE,NULL);
 \n\b Arguments:
 \n\b Returns:	allocated struct or NULL on fail
@@ -492,7 +492,7 @@ struct p_fifo *init_fifo(int mode)
 		return NULL;
 	}
 	/**set debug here for debug messages */
-	f->dbg=1;  
+	f->dbg=1;
 	f->len=7999;
 /*	f->dbg=1; */
 /*	g_printf("My PID is %d\n",getpid()); */
@@ -503,11 +503,11 @@ struct p_fifo *init_fifo(int mode)
 		if(create_fifo() < 0 ){
 			g_printf("error creating fifo\n");
 		  goto err;
-		}	
+		}
 		if(open_fifos(f) < 0 ){
 			g_printf("Error opening fifo. Exit\n");
 			goto err;
-		}	
+		}
 		return f;
 		  /**We are the client  */
 	}	else{
@@ -519,11 +519,11 @@ struct p_fifo *init_fifo(int mode)
 		}
 		return f;
 	}
-	
+
 err:
 	close_fifos(f);
 	return NULL;
-	
+
 }
 
 /***************************************************************************/
@@ -535,12 +535,12 @@ void close_fifos(struct p_fifo *f)
 {
 	if(NULL ==f)
 		return;
-	
+
 	if(NULL != f->g_ch_p)
 		g_io_channel_shutdown(f->g_ch_p,TRUE,NULL);
 	if(f->fifo_p>0)
 		close(f->fifo_p);
-	
+
 	if(NULL != f->g_ch_c)
 		g_io_channel_shutdown(f->g_ch_c,TRUE,NULL);
 	if(f->fifo_c>0)
