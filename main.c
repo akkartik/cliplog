@@ -316,43 +316,11 @@ static void parcellite_init()
   primary = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
   clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
 
-  if(FALSE ==g_thread_supported()){
-    g_printf("g_thread not init!\n");
-  }
   clip_lock= g_mutex_new();
   hist_lock= g_mutex_new();
   g_mutex_unlock(clip_lock);
 
   g_timeout_add(CHECK_INTERVAL, check_clipboards_tic, NULL);
-}
-
-
-/* which - which fifo we write to. */
-void write_stdin(struct p_fifo *fifo, int which)
-{
-  if (!isatty(fileno(stdin)))   {
-    GString* piped_string = g_string_new(NULL);
-    /* Append stdin to string */
-    while (1)    {
-      gchar* buffer = (gchar*)g_malloc(256);
-      if (fgets(buffer, 256, stdin) == NULL)  {
-        g_free(buffer);
-        break;
-      }
-      g_string_append(piped_string, buffer);
-      g_free(buffer);
-    }
-    /* Check if anything was piped in */
-    if (piped_string->len > 0) {
-      /* Truncate new line character */
-      /* Copy to clipboard */
-     write_fifo(fifo,which,piped_string->str,piped_string->len);
-     /*sleep(10); */
-      /* Exit */
-    }
-    g_string_free(piped_string, TRUE);
-
-  }
 }
 
 int main(int argc, char *argv[])
