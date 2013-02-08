@@ -134,7 +134,9 @@ gchar* update_clipboard(GtkClipboard *clip, gchar *intext,  gint mode)
   }
   /**check for changed clipboard content - in all modes */
   changed = gtk_clipboard_wait_for_text(clip);
-  if (0 == g_strcmp0(*existing, changed)) {
+  if (changed == NULL) {
+    // do nothing
+  } else  if (0 == g_strcmp0(*existing, changed)) {
     g_free(changed);                    /**no change, do nothing  */
     changed = NULL;
   } else {
