@@ -104,30 +104,24 @@ gboolean is_clipboard_empty(GtkClipboard *clip)
   return !contents;
 }
 
-gchar* update_clipboard(GtkClipboard *clip)
+gchar* update_clipboard()
 {
   /**current/last item in clipboard  */
-  static gchar *ptext = NULL;
   static gchar *ctext = NULL;
   static gchar *last = NULL; /**last text change, for either clipboard  */
   gchar **existing, *changed = NULL;
   gchar *processed;
-  GdkModifierType button_state;
   int set = 1;
   existing = &ctext;
 
-  /**check that our clipboards are valid and user wants to use them  */
-  if (clip != clipboard)
-      return NULL;
-
   /**check for lost contents and restore if lost */
   /* Only recover lost contents if there isn't any other type of content in the clipboard */
-  if (is_clipboard_empty(clip) && NULL != *existing) {
-    gtk_clipboard_set_text(clip, *existing, -1);
+  if (is_clipboard_empty(clipboard) && NULL != *existing) {
+    gtk_clipboard_set_text(clipboard, *existing, -1);
     last = *existing;
   }
   /**check for changed clipboard content - in all modes */
-  changed = gtk_clipboard_wait_for_text(clip);
+  changed = gtk_clipboard_wait_for_text(clipboard);
   if (changed == NULL) {
     // do nothing
   } else  if (0 == g_strcmp0(*existing, changed)) {
@@ -138,7 +132,7 @@ gchar* update_clipboard(GtkClipboard *clip)
       if (0 == g_strcmp0(processed, changed)) set = 0;
       else set = 1;
 
-      last = _update_clipboard(clip, processed, existing, set);
+      last = _update_clipboard(clipboard, processed, existing, set);
     } else {/**restore clipboard  */
       gchar *d;
 
@@ -149,7 +143,7 @@ gchar* update_clipboard(GtkClipboard *clip)
       } else
         d = *existing;
       if (NULL != d) {
-        last = _update_clipboard(clip, d, existing, 1);
+        last = _update_clipboard(clipboard, d, existing, 1);
       }
 
     }
