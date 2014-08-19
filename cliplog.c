@@ -176,15 +176,6 @@ gchar* update_clipboard(GtkClipboard *clip, gchar *intext,  gint mode)
       append_item(last);
     }
     goto done;
-  } else if (H_MODE_NEW==mode) {
-    if (NULL != (processed = process_new_item(intext))) {
-      if (0 == g_strcmp0(processed, *existing)) set = 0;
-      else set = 1;
-      last = _update_clipboard(clip, processed, existing, set);
-      if (NULL != last)
-        append_item(last);
-    } else
-      return NULL;
   }
 
 done:
