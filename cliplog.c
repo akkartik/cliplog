@@ -44,9 +44,9 @@ void log_clipboard() {
   FILE* history_file = fopen(history_path, "a");
   if (!history_file) return;
   /* Write most recent element */
-  time_t foo;
-  time(&foo);
-  fprintf(history_file, "-- %s%s\n", ctime(&foo),
+  time_t now;
+  time(&now);
+  fprintf(history_file, "-- %s%s\n", ctime(&now),
       ((struct history_item*)history_list->data)->text);
   fclose(history_file);
 }
