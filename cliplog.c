@@ -9,11 +9,6 @@ GtkClipboard* clipboard;
 
 GMutex* state_lock = NULL;
 
-/**clipboard handling modes  */
-#define H_MODE_LIST 2 /**from list, just put it on the clip  */
-#define H_MODE_CHECK 3 /**see if there is new/lost contents.   */
-#define H_MODE_LAST  4 /**just return the last updated value.  */
-
 /* Pass in the text via the struct. We assume len is correct, and BYTE based,
  * not character. Returns length of resulting string. */
 glong validate_utf8_text(gchar *text, glong len)
@@ -109,7 +104,7 @@ gboolean is_clipboard_empty(GtkClipboard *clip)
   return !contents;
 }
 
-gchar* update_clipboard(GtkClipboard *clip, gchar *intext,  gint mode)
+gchar* update_clipboard(GtkClipboard *clip, gchar *intext)
 {
   /**current/last item in clipboard  */
   static gchar *ptext = NULL;
@@ -119,8 +114,6 @@ gchar* update_clipboard(GtkClipboard *clip, gchar *intext,  gint mode)
   gchar *processed;
   GdkModifierType button_state;
   int set = 1;
-  if (H_MODE_LAST == mode)
-    return last;
   existing = &ctext;
 
   /**check that our clipboards are valid and user wants to use them  */
@@ -169,7 +162,7 @@ gchar* update_clipboard(GtkClipboard *clip, gchar *intext,  gint mode)
 }
 
 gboolean check_clipboards(gpointer dummy) {
-  update_clipboard(clipboard, NULL, H_MODE_CHECK);
+  update_clipboard(clipboard, NULL);
   return TRUE;
 }
 
