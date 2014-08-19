@@ -114,12 +114,6 @@ gchar* update_clipboard()
   int set = 1;
   existing = &ctext;
 
-  /**check for lost contents and restore if lost */
-  /* Only recover lost contents if there isn't any other type of content in the clipboard */
-  if (is_clipboard_empty(clipboard) && NULL != *existing) {
-    gtk_clipboard_set_text(clipboard, *existing, -1);
-    last = *existing;
-  }
   /**check for changed clipboard content - in all modes */
   changed = gtk_clipboard_wait_for_text(clipboard);
   if (changed == NULL) {
