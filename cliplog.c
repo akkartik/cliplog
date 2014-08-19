@@ -169,19 +169,7 @@ gchar* update_clipboard(GtkClipboard *clip, gchar *intext,  gint mode)
 }
 
 gboolean check_clipboards(gpointer dummy) {
-  gchar *ptext, *ctext, *last;
-  int n = 0;
-
-  ctext = update_clipboard(clipboard, NULL, H_MODE_CHECK);
-
-  if (NULL==ptext && NULL ==ctext) return;
-  last = update_clipboard(NULL, NULL, H_MODE_LAST);
-  if (NULL != last && 0 != g_strcmp0(ptext, ctext)) {
-    /**last is a copy, of things that may be deallocated  */
-    last = strdup(last);
-    update_clipboard(clipboard, last, H_MODE_LIST);
-    g_free(last);
-  }
+  update_clipboard(clipboard, NULL, H_MODE_CHECK);
   return TRUE;
 }
 
