@@ -165,19 +165,6 @@ gchar* update_clipboard(GtkClipboard *clip, gchar *intext,  gint mode)
     g_free(changed);
     changed = NULL;
   }
-  if (H_MODE_CHECK==mode) {
-    goto done;
-  }
-
-  if (H_MODE_LIST == mode && 0 != g_strcmp0(intext, *existing)) { /**just set clipboard contents. Already in list  */
-    last = _update_clipboard(clip, intext, existing, 1);
-    if (NULL != last) {/**maintain persistence, if set  */
-      append_item(last);
-    }
-    goto done;
-  }
-
-done:
   return *existing;
 }
 
