@@ -104,7 +104,7 @@ gboolean is_clipboard_empty(GtkClipboard *clip)
   return !contents;
 }
 
-gchar* update_clipboard(GtkClipboard *clip, gchar *intext)
+gchar* update_clipboard(GtkClipboard *clip)
 {
   /**current/last item in clipboard  */
   static gchar *ptext = NULL;
@@ -162,7 +162,7 @@ gchar* update_clipboard(GtkClipboard *clip, gchar *intext)
 }
 
 gboolean check_clipboards(gpointer dummy) {
-  update_clipboard(clipboard, NULL);
+  update_clipboard(clipboard);
   return TRUE;
 }
 
