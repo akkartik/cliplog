@@ -10,7 +10,6 @@ GtkClipboard* clipboard;
 GMutex* state_lock = NULL;
 
 /**clipboard handling modes  */
-#define H_MODE_NEW  1 /**new text, process it  */
 #define H_MODE_LIST 2 /**from list, just put it on the clip  */
 #define H_MODE_CHECK 3 /**see if there is new/lost contents.   */
 #define H_MODE_LAST  4 /**just return the last updated value.  */
