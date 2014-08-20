@@ -74,17 +74,12 @@ void append_item(gchar* item)
   g_mutex_unlock(state_lock);
 }
 
-gchar* process_new_item(gchar* ntext) {
-  return validate_utf8_text(ntext, strlen(ntext)) ? ntext : NULL;
-}
-
 gchar* update_clipboard()
 {
   /**current/last item in clipboard  */
   static gchar *ctext = NULL;
   static gchar *last = NULL;
   gchar *changed = NULL;
-  gchar *processed;
   int set = 1;
 
   changed = gtk_clipboard_wait_for_text(clipboard);
@@ -93,10 +88,10 @@ gchar* update_clipboard()
   } else  if (0 == g_strcmp0(ctext, changed)) {
     // do nothing
   } else {
-    if (processed=process_new_item(changed)) {
+    if (validate_utf8_text(changed, strlen(changed))) {
       if (ctext)
         g_free(ctext);
-      ctext = g_strdup(processed);
+      ctext = g_strdup(changed);
       last = ctext;
       if (last) append_item(last);
     }
