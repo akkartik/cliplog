@@ -96,7 +96,6 @@ gchar* update_clipboard()
   gchar *processed;
   int set = 1;
 
-  /**check for changed clipboard content - in all modes */
   changed = gtk_clipboard_wait_for_text(clipboard);
   if (changed == NULL) {
     // do nothing
@@ -108,9 +107,7 @@ gchar* update_clipboard()
         g_free(ctext);
       ctext = g_strdup(processed);
       last = ctext;
-      if (last) {
-        append_item(last);
-      }
+      if (last) append_item(last);
     }
   }
   if (changed) g_free(changed);
@@ -130,8 +127,6 @@ int main(int argc, char *argv[])
   g_timeout_add(500/*ms*/, check_clipboards, NULL);
 
   state_lock = g_mutex_new();
-
   gtk_main();
-
   return 0;
 }
