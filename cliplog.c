@@ -15,7 +15,7 @@ glong validate_utf8_text(gchar *text, glong len)
 {
   const gchar *valid;
   text[len] = 0;
-  if (FALSE == g_utf8_validate(text, -1, &valid)) {
+  if (!g_utf8_validate(text, -1, &valid)) {
     g_printf("Truncating invalid utf8 text entry: ");
     len = valid-text;
     text[len] = 0;
@@ -48,7 +48,7 @@ void log_clipboard() {
 struct history_item *new_clip_item(guint32 len, void *data)
 {
   struct history_item *c;
-  if (NULL == (c=g_malloc0(sizeof(struct history_item)+len))) {
+  if (!(c=g_malloc0(sizeof(struct history_item)+len))) {
     printf("Hit NULL for malloc of history_item!\n");
     return NULL;
   }
@@ -61,12 +61,12 @@ struct history_item *new_clip_item(guint32 len, void *data)
 void append_item(gchar* item)
 {
   gint node = -1;
-  if (NULL == item)
+  if (!item)
     return;
   g_mutex_lock(state_lock);
 
   struct history_item *c;
-  if (NULL == (c=new_clip_item(strlen(item), item)))
+  if (!(c=new_clip_item(strlen(item), item)))
     return;
 
   history_list = g_list_prepend(history_list, c);
@@ -101,21 +101,19 @@ gchar* update_clipboard()
   if (changed == NULL) {
     // do nothing
   } else  if (0 == g_strcmp0(ctext, changed)) {
-    g_free(changed);                    /**no change, do nothing  */
-    changed = NULL;
+    // do nothing
   } else {
-    if (NULL != (processed=process_new_item(changed))) {
-      if (NULL != *&ctext)
+    if (processed=process_new_item(changed)) {
+      if (ctext)
         g_free(ctext);
       ctext = g_strdup(processed);
       last = ctext;
-      if (NULL != last) {
+      if (last) {
         append_item(last);
       }
     }
-    g_free(changed);
-    changed = NULL;
   }
+  if (changed) g_free(changed);
   return ctext;
 }
 
