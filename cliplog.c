@@ -78,21 +78,6 @@ gchar* process_new_item(gchar* ntext) {
   return validate_utf8_text(ntext, strlen(ntext)) ? ntext : NULL;
 }
 
-gchar *_update_clipboard (GtkClipboard *clip, gchar *n, gchar **old) {
-  if (NULL != n) {
-    if (NULL != *old)
-      g_free(*old);
-    *old = g_strdup(n);
-    return *old;
-  } else{
-    if (NULL != *old)
-      g_free(*old);
-    *old = NULL;
-  }
-
-  return NULL;
-}
-
 gboolean is_clipboard_empty(GtkClipboard *clip)
 {
   int count;
@@ -120,7 +105,17 @@ gchar* update_clipboard()
     changed = NULL;
   } else {
     if (NULL != (processed=process_new_item(changed))) {
-      last = _update_clipboard(clipboard, processed, &ctext);
+      if (NULL != processed) {
+        if (NULL != *&ctext)
+          g_free(ctext);
+        ctext = g_strdup(processed);
+        last = ctext;
+      } else {
+        if (NULL != ctext)
+          g_free(ctext);
+        ctext = NULL;
+        last = NULL;
+      }
       if (NULL != last) {
         append_item(last);
       }
