@@ -4,18 +4,6 @@
 
 GtkClipboard* clipboard;
 
-glong validate_utf8_text(gchar *text, glong nbytes) {
-  const gchar *valid;
-  text[nbytes] = 0;
-  if (!g_utf8_validate(text, -1, &valid)) {
-    g_printf("Truncating invalid utf8 text entry: ");
-    nbytes = valid-text;
-    text[nbytes] = 0;
-    g_printf("'%s'\n", text);
-  }
-  return nbytes;
-}
-
 void log_clipboard(char* data) {
   static gchar* history_path = NULL;
   if (!history_path)
@@ -32,12 +20,10 @@ gchar* update_clipboard() {
   static gchar *cprev = NULL;
   gchar *cnext = gtk_clipboard_wait_for_text(clipboard);
   if (cnext && g_strcmp0(cprev, cnext)) {
-    if (validate_utf8_text(cnext, strlen(cnext))) {
-      log_clipboard(cnext);
-      if (cprev) g_free(cprev);
-      cprev = cnext;
-      cnext = NULL;
-    }
+    log_clipboard(cnext);
+    if (cprev) g_free(cprev);
+    cprev = cnext;
+    cnext = NULL;
   }
   if (cnext) g_free(cnext);
   return cprev;
