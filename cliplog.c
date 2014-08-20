@@ -78,15 +78,6 @@ gchar* process_new_item(gchar* ntext) {
   return validate_utf8_text(ntext, strlen(ntext)) ? ntext : NULL;
 }
 
-gboolean is_clipboard_empty(GtkClipboard *clip)
-{
-  int count;
-  GdkAtom *targets;
-  gboolean contents = gtk_clipboard_wait_for_targets(clip, &targets, &count);
-  g_free(targets);
-  return !contents;
-}
-
 gchar* update_clipboard()
 {
   /**current/last item in clipboard  */
