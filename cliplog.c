@@ -105,17 +105,10 @@ gchar* update_clipboard()
     changed = NULL;
   } else {
     if (NULL != (processed=process_new_item(changed))) {
-      if (NULL != processed) {
-        if (NULL != *&ctext)
-          g_free(ctext);
-        ctext = g_strdup(processed);
-        last = ctext;
-      } else {
-        if (NULL != ctext)
-          g_free(ctext);
-        ctext = NULL;
-        last = NULL;
-      }
+      if (NULL != *&ctext)
+        g_free(ctext);
+      ctext = g_strdup(processed);
+      last = ctext;
       if (NULL != last) {
         append_item(last);
       }
