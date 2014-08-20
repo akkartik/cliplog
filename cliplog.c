@@ -33,10 +33,10 @@ gchar* update_clipboard() {
   gchar *cnext = gtk_clipboard_wait_for_text(clipboard);
   if (cnext && g_strcmp0(cprev, cnext)) {
     if (validate_utf8_text(cnext, strlen(cnext))) {
-      if (cprev)
-        g_free(cprev);
-      cprev = g_strdup(cnext);
-      if (cprev) log_clipboard(cprev);
+      log_clipboard(cnext);
+      if (cprev) g_free(cprev);
+      cprev = cnext;
+      cnext = NULL;
     }
   }
   if (cnext) g_free(cnext);
