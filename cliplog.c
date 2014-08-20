@@ -107,30 +107,29 @@ gchar* update_clipboard()
   /**current/last item in clipboard  */
   static gchar *ctext = NULL;
   static gchar *last = NULL;
-  gchar **existing, *changed = NULL;
+  gchar *changed = NULL;
   gchar *processed;
   int set = 1;
-  existing = &ctext;
 
   /**check for changed clipboard content - in all modes */
   changed = gtk_clipboard_wait_for_text(clipboard);
   if (changed == NULL) {
     // do nothing
-  } else  if (0 == g_strcmp0(*existing, changed)) {
+  } else  if (0 == g_strcmp0(ctext, changed)) {
     g_free(changed);                    /**no change, do nothing  */
     changed = NULL;
   } else {
     if (NULL != (processed=process_new_item(changed))) {
-      last = _update_clipboard(clipboard, processed, existing);
+      last = _update_clipboard(clipboard, processed, &ctext);
     } else {/**restore clipboard  */
       gchar *d;
 
-      if (NULL ==*existing && NULL != history_list) {
+      if (NULL == ctext && NULL != history_list) {
         struct history_item *c;
         c = (struct history_item *)(history_list->data);
         d = c->text;
       } else {
-        d = *existing;
+        d = ctext;
       }
     }
     if (NULL != last) {
@@ -139,7 +138,7 @@ gchar* update_clipboard()
     g_free(changed);
     changed = NULL;
   }
-  return *existing;
+  return ctext;
 }
 
 gboolean check_clipboards(gpointer dummy) {
