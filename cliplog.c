@@ -29,18 +29,18 @@ void log_clipboard(char* data) {
 }
 
 gchar* update_clipboard() {
-  static gchar *curr = NULL;
+  static gchar *cprev = NULL;
   gchar *cnext = gtk_clipboard_wait_for_text(clipboard);
-  if (cnext && g_strcmp0(curr, cnext)) {
+  if (cnext && g_strcmp0(cprev, cnext)) {
     if (validate_utf8_text(cnext, strlen(cnext))) {
-      if (curr)
-        g_free(curr);
-      curr = g_strdup(cnext);
-      if (curr) log_clipboard(curr);
+      if (cprev)
+        g_free(cprev);
+      cprev = g_strdup(cnext);
+      if (cprev) log_clipboard(cprev);
     }
   }
   if (cnext) g_free(cnext);
-  return curr;
+  return cprev;
 }
 
 gboolean check_clipboards(gpointer dummy) {
