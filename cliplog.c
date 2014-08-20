@@ -83,11 +83,7 @@ gchar* update_clipboard()
   int set = 1;
 
   changed = gtk_clipboard_wait_for_text(clipboard);
-  if (changed == NULL) {
-    // do nothing
-  } else  if (0 == g_strcmp0(ctext, changed)) {
-    // do nothing
-  } else {
+  if (changed && g_strcmp0(ctext, changed)) {
     if (validate_utf8_text(changed, strlen(changed))) {
       if (ctext)
         g_free(ctext);
