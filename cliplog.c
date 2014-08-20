@@ -122,14 +122,9 @@ gchar* update_clipboard()
     if (NULL != (processed=process_new_item(changed))) {
       last = _update_clipboard(clipboard, processed, &ctext);
     } else {/**restore clipboard  */
-      gchar *d;
-
       if (NULL == ctext && NULL != history_list) {
         struct history_item *c;
         c = (struct history_item *)(history_list->data);
-        d = c->text;
-      } else {
-        d = ctext;
       }
     }
     if (NULL != last) {
