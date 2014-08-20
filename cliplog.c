@@ -77,23 +77,20 @@ void append_item(gchar* item)
 gchar* update_clipboard()
 {
   /**current/last item in clipboard  */
-  static gchar *ctext = NULL;
-  static gchar *last = NULL;
-  gchar *changed = NULL;
-  int set = 1;
+  static gchar *curr = NULL;
+  gchar *cnext = NULL;
 
-  changed = gtk_clipboard_wait_for_text(clipboard);
-  if (changed && g_strcmp0(ctext, changed)) {
-    if (validate_utf8_text(changed, strlen(changed))) {
-      if (ctext)
-        g_free(ctext);
-      ctext = g_strdup(changed);
-      last = ctext;
-      if (last) append_item(last);
+  cnext = gtk_clipboard_wait_for_text(clipboard);
+  if (cnext && g_strcmp0(curr, cnext)) {
+    if (validate_utf8_text(cnext, strlen(cnext))) {
+      if (curr)
+        g_free(curr);
+      curr = g_strdup(cnext);
+      if (curr) append_item(curr);
     }
   }
-  if (changed) g_free(changed);
-  return ctext;
+  if (cnext) g_free(cnext);
+  return curr;
 }
 
 gboolean check_clipboards(gpointer dummy) {
