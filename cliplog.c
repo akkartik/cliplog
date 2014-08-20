@@ -1,7 +1,4 @@
-/* Copyright (C) 2007-2008 by Xyhthyx <xyhthyx@gmail.com> */
-
 #include <gtk/gtk.h>
-
 #include <string.h>
 #include <unistd.h>
 
