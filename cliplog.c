@@ -7,19 +7,16 @@
 
 GtkClipboard* clipboard;
 
-/* Pass in the text via the struct. We assume len is correct, and BYTE based,
- * not character. Returns length of resulting string. */
-glong validate_utf8_text(gchar *text, glong len)
-{
+glong validate_utf8_text(gchar *text, glong nbytes) {
   const gchar *valid;
-  text[len] = 0;
+  text[nbytes] = 0;
   if (!g_utf8_validate(text, -1, &valid)) {
     g_printf("Truncating invalid utf8 text entry: ");
-    len = valid-text;
-    text[len] = 0;
+    nbytes = valid-text;
+    text[nbytes] = 0;
     g_printf("'%s'\n", text);
   }
-  return len;
+  return nbytes;
 }
 
 void log_clipboard(char* data) {
@@ -34,8 +31,7 @@ void log_clipboard(char* data) {
   fclose(history_file);
 }
 
-gchar* update_clipboard()
-{
+gchar* update_clipboard() {
   static gchar *curr = NULL;
   gchar *cnext = gtk_clipboard_wait_for_text(clipboard);
   if (cnext && g_strcmp0(curr, cnext)) {
@@ -55,8 +51,7 @@ gboolean check_clipboards(gpointer dummy) {
   return TRUE;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   gtk_init(&argc, &argv);
 
   clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
