@@ -78,10 +78,8 @@ gchar* process_new_item(gchar* ntext) {
   return validate_utf8_text(ntext, strlen(ntext)) ? ntext : NULL;
 }
 
-gchar *_update_clipboard (GtkClipboard *clip, gchar *n, gchar **old, int set) {
+gchar *_update_clipboard (GtkClipboard *clip, gchar *n, gchar **old) {
   if (NULL != n) {
-    if (set)
-      gtk_clipboard_set_text(clip, n, -1);
     if (NULL != *old)
       g_free(*old);
     *old = g_strdup(n);
@@ -108,7 +106,7 @@ gchar* update_clipboard()
 {
   /**current/last item in clipboard  */
   static gchar *ctext = NULL;
-  static gchar *last = NULL; /**last text change, for either clipboard  */
+  static gchar *last = NULL;
   gchar **existing, *changed = NULL;
   gchar *processed;
   int set = 1;
@@ -123,10 +121,7 @@ gchar* update_clipboard()
     changed = NULL;
   } else {
     if (NULL != (processed=process_new_item(changed))) {
-      if (0 == g_strcmp0(processed, changed)) set = 0;
-      else set = 1;
-
-      last = _update_clipboard(clipboard, processed, existing, set);
+      last = _update_clipboard(clipboard, processed, existing);
     } else {/**restore clipboard  */
       gchar *d;
 
@@ -134,15 +129,13 @@ gchar* update_clipboard()
         struct history_item *c;
         c = (struct history_item *)(history_list->data);
         d = c->text;
-      } else
+      } else {
         d = *existing;
-      if (NULL != d) {
-        last = _update_clipboard(clipboard, d, existing, 1);
       }
-
     }
-    if (NULL != last)
+    if (NULL != last) {
       append_item(last);
+    }
     g_free(changed);
     changed = NULL;
   }
