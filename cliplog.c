@@ -4,7 +4,7 @@
 
 GtkClipboard* clipboard;
 
-void log_clipboard(char* data) {
+void log_clipboard(gchar* data) {
   static gchar* history_path = NULL;
   if (!history_path)
       history_path = g_build_filename(g_get_user_data_dir(), "clipboard_log", NULL);
@@ -16,7 +16,7 @@ void log_clipboard(char* data) {
   fclose(history_file);
 }
 
-gchar* update_clipboard() {
+gboolean update_clipboard(gpointer dummy) {
   static gchar *cprev = NULL;
   gchar *cnext = gtk_clipboard_wait_for_text(clipboard);
   if (cnext && g_strcmp0(cprev, cnext)) {
@@ -26,11 +26,6 @@ gchar* update_clipboard() {
     cnext = NULL;
   }
   if (cnext) g_free(cnext);
-  return cprev;
-}
-
-gboolean check_clipboards(gpointer dummy) {
-  update_clipboard(clipboard);
   return TRUE;
 }
 
@@ -38,7 +33,7 @@ int main(int argc, char *argv[]) {
   gtk_init(&argc, &argv);
 
   clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-  g_timeout_add(500/*ms*/, check_clipboards, NULL);
+  g_timeout_add(500/*ms*/, update_clipboard, NULL);
   gtk_main();
   return 0;
 }
